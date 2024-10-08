@@ -1,6 +1,6 @@
-#URL Shortener Project
+# 🚀URL Shortener Project
 
-##Table of Contents
+## Table of Contents
 
 -[Overview](#overview)
 -[Features](#features)
@@ -11,11 +11,11 @@
 -[Liscence](#overview)
 
 
-##Overview
+## Overview
 
- The URL ###Shortener is a web application designed to transform long, complex URLs into shortened, easy-to-share links. Built with a modern tech stack, the project demonstrates efficient front-end and back-end integration, responsive design, and user-focused functionality. It serves as a learning tool for full-stack web development using Angular, Tailwind CSS, and Flask.
+ The URL ### Shortener is a web application designed to transform long, complex URLs into shortened, easy-to-share links. Built with a modern tech stack, the project demonstrates efficient front-end and back-end integration, responsive design, and user-focused functionality. It serves as a learning tool for full-stack web development using Angular, Tailwind CSS, and Flask.
  
-##Features
+## Features
 
       URL Shortening: Users can input long URLs and receive a shortened version instantly.
      User-Friendly Interface: The application is designed with a clean and intuitive interface, making it easy for users to navigate and utilize the service.
@@ -32,9 +32,9 @@
     Copyright Notice: The footer includes copyright information, reinforcing professionalism
 
 
-##Technologies Used
+## Technologies Used
 
-  ###Frontend:
+  ### Frontend:
   
       Angular: A powerful framework for building single-page applications.
      
@@ -42,13 +42,13 @@
       
       TypeScript: Enhances JavaScript by adding static types, ensuring robust and maintainable code.
       
-  ###Backend:
+  ### Backend:
   
      Flask: A lightweight Python web framework for building the backend service.
      
      Flask-CORS: Enables Cross-Origin Resource Sharing (CORS) for the API.
      
-  ###Version Control:
+  ### Version Control:
   
     Git: Used for version control and collaboration.
     
