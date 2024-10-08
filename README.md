@@ -55,3 +55,20 @@
     Git: Used for version control and collaboration.
     
     GitHub: The project is hosted on GitHub for easy access and collaboration.
+
+
+
+   # 🤝 Contribution
+
+   1. Fork it!
+   2. Create your features branch: git checkout -b feature-branch
+   3. Commit your changes: git commit -am 'Add new feature'
+   4. Push to the branch: git push origin feature-branch
+   5. Submit a pull request 🚀
+
+
+
+
+ # 🧾 License
+
+ This project is licensed under the MIT License -see the License file for details.
