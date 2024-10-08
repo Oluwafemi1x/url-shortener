@@ -1,5 +1,7 @@
 # 🚀URL Shortener Project
 
+![Project Banner](https://github.com/Oluwafemi1x/url-shortener/blob/main/assets/banner.png)
+
 ## Table of Contents
 
 -[Overview](#overview)
