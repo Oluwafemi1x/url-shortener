@@ -17,7 +17,7 @@
  - 🛠  Built with Angular, Flask and Tailwind Css
 
    
-##Table of Contents
+## Table of Contents
 
 - ![Features](#features)
 - ![Installation](#installation)
