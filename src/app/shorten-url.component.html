@@ -1,0 +1,28 @@
+<div class="flex flex-col items-center justify-center h-screen bg-cover bg-center" style="background-image: url('/assets/background-image.jpg');"> 
+  <div class="w-full max-w-md p-6 bg-white rounded-md shadow-md"> 
+    <h2 class="text-xl font-bold mb-4 text-center">URL Shortener</h2> 
+    <input 
+      type="text" 
+      [(ngModel)]="originalUrl" 
+      placeholder="Enter the URL to shorten" 
+      class="w-full p-3 mb-4 border border-gray-300 rounded-full shadow-sm" 
+    /> 
+    <button 
+      (click)="onShortenUrl()" 
+      class="w-full bg-blue-500 text-white p-2 rounded-md" 
+    > 
+      Shorten URL 
+    </button> 
+    <div *ngIf="shortenedUrl" class="mt-4"> 
+      <p>Shortened URL:</p> 
+      <a [href]="shortenedUrl" target="_blank" class="text-blue-500"> 
+        {{ shortenedUrl }} 
+      </a> 
+    </div> 
+  </div> 
+
+  <!-- Footer -->
+  <footer class="absolute bottom-0 w-full p-4 bg-gray-800 text-white text-center">
+    &copy; {{ currentYear }} Your Company Name. All rights reserved.
+  </footer>
+</div>
