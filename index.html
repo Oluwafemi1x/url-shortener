@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#08111f">
+  <meta name="description" content="Pycoder URL Shortener — create clean, permanent short links with optional custom aliases and link statistics.">
+  <title>Pycoder URL Shortener</title>
+  <link rel="preconnect" href="https://is.gd">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="Pycoder URL Shortener home">
+        <span class="brand-icon" aria-hidden="true">↗</span>
+        <span>
+          <strong>Pycoder</strong>
+          <small>URL Shortener</small>
+        </span>
+      </a>
+      <a class="github-link" href="https://github.com/Oluwafemi1x/url-shortener" target="_blank" rel="noreferrer">GitHub ↗</a>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow">Fast · clean · permanent links</span>
+          <h1>Turn long links into <span>short, shareable URLs.</span></h1>
+          <p>Create a short URL in seconds, choose a custom alias when available, copy it instantly, and keep a private history in your browser.</p>
+        </div>
+
+        <div class="shortener-card">
+          <form id="shortenForm" novalidate>
+            <label for="longUrl">Long URL</label>
+            <div class="input-row">
+              <span class="input-icon" aria-hidden="true">🔗</span>
+              <input id="longUrl" name="longUrl" type="url" inputmode="url" autocomplete="url"
+                placeholder="https://example.com/a/very/long/link" maxlength="5000" required>
+            </div>
+            <p class="field-hint">You can paste a URL with or without <code>https://</code>.</p>
+
+            <div class="options-grid">
+              <div>
+                <label for="customAlias">Custom alias <span class="optional">(optional)</span></label>
+                <div class="alias-field">
+                  <span>is.gd/</span>
+                  <input id="customAlias" name="customAlias" type="text" autocomplete="off"
+                    placeholder="pycoder1" minlength="5" maxlength="30" pattern="[A-Za-z0-9_]+">
+                </div>
+                <p class="field-hint">5–30 letters, numbers or underscores.</p>
+              </div>
+
+              <label class="toggle-card" for="logStats">
+                <span>
+                  <strong>Link statistics</strong>
+                  <small>Enable is.gd visit statistics</small>
+                </span>
+                <input id="logStats" type="checkbox">
+                <span class="toggle" aria-hidden="true"></span>
+              </label>
+            </div>
+
+            <div id="formError" class="message error" role="alert" hidden></div>
+
+            <button id="shortenButton" class="primary-button" type="submit">
+              <span class="button-label">Shorten URL</span>
+              <span class="spinner" aria-hidden="true" hidden></span>
+            </button>
+          </form>
+
+          <section id="resultPanel" class="result-panel" aria-live="polite" hidden>
+            <div class="success-heading">
+              <span class="success-dot" aria-hidden="true"></span>
+              <div>
+                <strong>Your short link is ready</strong>
+                <small id="resultOriginal"></small>
+              </div>
+            </div>
+
+            <div class="result-url-row">
+              <a id="shortUrl" href="#" target="_blank" rel="noreferrer"></a>
+              <button id="copyButton" class="icon-button" type="button">Copy</button>
+            </div>
+
+            <div class="result-actions">
+              <button id="shareButton" class="secondary-button" type="button">Share</button>
+              <a id="openButton" class="secondary-button" href="#" target="_blank" rel="noreferrer">Open link ↗</a>
+              <a id="statsButton" class="secondary-button" href="#" target="_blank" rel="noreferrer" hidden>View stats ↗</a>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="trust-strip" aria-label="Features">
+        <div><strong>Permanent</strong><span>Links created through is.gd</span></div>
+        <div><strong>Private history</strong><span>Stored only in this browser</span></div>
+        <div><strong>No account</strong><span>Shorten without signing up</span></div>
+        <div><strong>Responsive</strong><span>Works on mobile and desktop</span></div>
+      </section>
+
+      <section class="history-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Recent links</span>
+            <h2>Your local history</h2>
+          </div>
+          <button id="clearHistoryButton" class="text-button" type="button" hidden>Clear history</button>
+        </div>
+
+        <div id="emptyHistory" class="empty-state">
+          <span aria-hidden="true">⌁</span>
+          <strong>No shortened links yet</strong>
+          <p>Your most recent links will appear here after you create them.</p>
+        </div>
+
+        <div id="historyList" class="history-list"></div>
+      </section>
+
+      <section class="how-it-works">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">How it works</span>
+            <h2>Three simple steps</h2>
+          </div>
+        </div>
+        <div class="steps">
+          <article><span>01</span><h3>Paste your URL</h3><p>Enter the destination link you want to make easier to share.</p></article>
+          <article><span>02</span><h3>Customize if you want</h3><p>Pick an available alias and optionally enable visit statistics.</p></article>
+          <article><span>03</span><h3>Copy and share</h3><p>Your permanent short URL is returned immediately and saved locally.</p></article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Built by <a href="https://github.com/Oluwafemi1x" target="_blank" rel="noreferrer">Olawumi Oluwafemi (Pycoder)</a>.</p>
+      <p>Live shortening is provided through the <a href="https://is.gd/developers.php" target="_blank" rel="noreferrer">is.gd API</a>.</p>
+    </footer>
+  </div>
+
+  <script src="./app.js" defer></script>
+</body>
+</html>
