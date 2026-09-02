@@ -1,13 +1,14 @@
 "use strict";
 
-const API_ENDPOINT = "https://is.gd/create.php";
-const HISTORY_KEY = "pycoder-url-shortener-history-v2";
+const PRIMARY_API = "https://spoo.me/";
+const FALLBACK_API = "https://cleanuri.com/api/v1/shorten";
+const HISTORY_KEY = "pycoder-url-shortener-history-v3";
 const MAX_HISTORY = 20;
+const REQUEST_TIMEOUT_MS = 10000;
 
 const form = document.getElementById("shortenForm");
 const longUrlInput = document.getElementById("longUrl");
 const customAliasInput = document.getElementById("customAlias");
-const logStatsInput = document.getElementById("logStats");
 const formError = document.getElementById("formError");
 const shortenButton = document.getElementById("shortenButton");
 const buttonLabel = shortenButton.querySelector(".button-label");
@@ -27,11 +28,17 @@ const clearHistoryButton = document.getElementById("clearHistoryButton");
 
 let latestResult = null;
 
+class ProviderError extends Error {
+  constructor(message, retryable = false) {
+    super(message);
+    this.name = "ProviderError";
+    this.retryable = retryable;
+  }
+}
+
 function normalizeUrl(value) {
   const trimmed = String(value || "").trim();
-  if (!trimmed) {
-    throw new Error("Enter a URL to shorten.");
-  }
+  if (!trimmed) throw new Error("Enter a URL to shorten.");
 
   const candidate = /^[a-zA-Z][a-zA-Z\d+.-]*:\/\//.test(trimmed)
     ? trimmed
@@ -63,8 +70,8 @@ function validateAlias(value) {
   const alias = String(value || "").trim();
   if (!alias) return "";
 
-  if (!/^[A-Za-z0-9_]{5,30}$/.test(alias)) {
-    throw new Error("Custom aliases must be 5–30 letters, numbers or underscores.");
+  if (!/^[A-Za-z0-9]{1,15}$/.test(alias)) {
+    throw new Error("Custom aliases can contain only letters and numbers, up to 15 characters.");
   }
 
   return alias;
@@ -86,59 +93,112 @@ function clearError() {
   formError.hidden = true;
 }
 
-function shortenWithJsonp(url, alias, logStats) {
-  return new Promise((resolve, reject) => {
-    const callbackName = "pycoderShortener_" + Date.now() + "_" + Math.random().toString(36).slice(2);
-    const params = new URLSearchParams({
-      format: "json",
-      url,
-      callback: callbackName
-    });
+async function fetchWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
 
-    if (alias) params.set("shorturl", alias);
-    if (logStats) params.set("logstats", "1");
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error && error.name === "AbortError") {
+      throw new ProviderError("The shortening provider did not respond in time.", true);
+    }
+    throw new ProviderError("Unable to reach the shortening provider. Check your connection and try again.", true);
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
 
-    const script = document.createElement("script");
-    const timeout = window.setTimeout(() => {
-      cleanup();
-      reject(new Error("The shortening service took too long to respond. Please try again."));
-    }, 12000);
+async function readJsonSafely(response) {
+  const text = await response.text();
+  if (!text) return {};
 
-    function cleanup() {
-      window.clearTimeout(timeout);
-      script.remove();
-      try {
-        delete window[callbackName];
-      } catch {
-        window[callbackName] = undefined;
-      }
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new ProviderError("The shortening provider returned an unexpected response.", response.status >= 500);
+  }
+}
+
+async function shortenWithSpoo(originalUrl, alias) {
+  const body = new URLSearchParams({ url: originalUrl });
+  if (alias) body.set("alias", alias);
+
+  const response = await fetchWithTimeout(PRIMARY_API, {
+    method: "POST",
+    mode: "cors",
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+    },
+    body
+  });
+
+  const payload = await readJsonSafely(response);
+
+  if (!response.ok) {
+    const message =
+      payload.message ||
+      payload.error ||
+      payload.detail ||
+      "The shortening provider could not create this link.";
+
+    const retryable = response.status === 429 || response.status >= 500;
+    throw new ProviderError(String(message), retryable);
+  }
+
+  const shortUrl = payload.short_url;
+  if (typeof shortUrl !== "string" || !/^https:\/\/spoo\.me\/[A-Za-z0-9_-]+$/.test(shortUrl)) {
+    throw new ProviderError("The shortening provider returned an invalid short URL.", true);
+  }
+
+  return { shortUrl, provider: "spoo" };
+}
+
+async function shortenWithCleanUri(originalUrl) {
+  const body = new URLSearchParams({ url: originalUrl });
+
+  const response = await fetchWithTimeout(FALLBACK_API, {
+    method: "POST",
+    mode: "cors",
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+    },
+    body
+  }, 8000);
+
+  const payload = await readJsonSafely(response);
+
+  if (!response.ok || payload.error) {
+    throw new ProviderError(
+      String(payload.error || "The backup shortening provider could not create this link."),
+      response.status === 429 || response.status >= 500
+    );
+  }
+
+  const shortUrl = payload.result_url;
+  if (typeof shortUrl !== "string" || !/^https:\/\/cleanuri\.com\/[A-Za-z0-9_-]+$/.test(shortUrl)) {
+    throw new ProviderError("The backup provider returned an invalid short URL.");
+  }
+
+  return { shortUrl, provider: "cleanuri" };
+}
+
+async function createShortLink(originalUrl, alias) {
+  try {
+    return await shortenWithSpoo(originalUrl, alias);
+  } catch (primaryError) {
+    if (alias || !(primaryError instanceof ProviderError) || !primaryError.retryable) {
+      throw primaryError;
     }
 
-    window[callbackName] = (payload) => {
-      cleanup();
-
-      if (!payload || payload.errorcode || payload.errormessage) {
-        reject(new Error(payload?.errormessage || "The shortening service returned an error."));
-        return;
-      }
-
-      if (!payload.shorturl || !/^https:\/\/is\.gd\/[A-Za-z0-9_]+$/.test(payload.shorturl)) {
-        reject(new Error("The shortening service returned an unexpected response."));
-        return;
-      }
-
-      resolve(payload.shorturl);
-    };
-
-    script.onerror = () => {
-      cleanup();
-      reject(new Error("Unable to reach the shortening service. Check your connection and try again."));
-    };
-
-    script.referrerPolicy = "no-referrer";
-    script.src = API_ENDPOINT + "?" + params.toString();
-    document.head.appendChild(script);
-  });
+    try {
+      return await shortenWithCleanUri(originalUrl);
+    } catch {
+      throw new Error("The shortening services are temporarily unreachable from your browser. Please try again shortly.");
+    }
+  }
 }
 
 function getHistory() {
@@ -150,11 +210,15 @@ function getHistory() {
   }
 }
 
+function isSupportedShortUrl(value) {
+  return /^https:\/\/(spoo\.me|cleanuri\.com|is\.gd)\/[A-Za-z0-9_-]+$/.test(value);
+}
+
 function isHistoryItem(item) {
   return item &&
     typeof item.originalUrl === "string" &&
     typeof item.shortUrl === "string" &&
-    /^https:\/\/is\.gd\/[A-Za-z0-9_]+$/.test(item.shortUrl);
+    isSupportedShortUrl(item.shortUrl);
 }
 
 function saveHistory(entry) {
@@ -186,9 +250,20 @@ async function copyText(text, button) {
 
   const previous = button.textContent;
   button.textContent = "Copied!";
-  setTimeout(() => {
+  window.setTimeout(() => {
     button.textContent = previous;
   }, 1400);
+}
+
+function statsUrlFor(entry) {
+  if (entry.provider !== "spoo") return null;
+
+  try {
+    const code = new URL(entry.shortUrl).pathname.replace(/^\/+/, "");
+    return code ? "https://spoo.me/stats/" + encodeURIComponent(code) : null;
+  } catch {
+    return null;
+  }
 }
 
 function showResult(entry) {
@@ -198,8 +273,9 @@ function showResult(entry) {
   shortUrlAnchor.href = entry.shortUrl;
   openButton.href = entry.shortUrl;
 
-  if (entry.logStats) {
-    statsButton.href = entry.shortUrl + "-";
+  const statsUrl = statsUrlFor(entry);
+  if (statsUrl) {
+    statsButton.href = statsUrl;
     statsButton.hidden = false;
   } else {
     statsButton.hidden = true;
@@ -207,6 +283,7 @@ function showResult(entry) {
   }
 
   resultPanel.hidden = false;
+  resultPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function createHistoryItem(entry) {
@@ -243,9 +320,10 @@ function createHistoryItem(entry) {
 
   actions.append(copy, open);
 
-  if (entry.logStats) {
+  const statsUrl = statsUrlFor(entry);
+  if (statsUrl) {
     const stats = document.createElement("a");
-    stats.href = entry.shortUrl + "-";
+    stats.href = statsUrl;
     stats.target = "_blank";
     stats.rel = "noreferrer";
     stats.textContent = "Stats ↗";
@@ -287,12 +365,11 @@ form.addEventListener("submit", async (event) => {
   setLoading(true);
 
   try {
-    const shortUrl = await shortenWithJsonp(originalUrl, alias, logStatsInput.checked);
-
+    const result = await createShortLink(originalUrl, alias);
     const entry = {
       originalUrl,
-      shortUrl,
-      logStats: logStatsInput.checked,
+      shortUrl: result.shortUrl,
+      provider: result.provider,
       createdAt: new Date().toISOString()
     };
 
@@ -321,7 +398,7 @@ shareButton.addEventListener("click", async () => {
       });
       return;
     } catch (error) {
-      if (error?.name === "AbortError") return;
+      if (error && error.name === "AbortError") return;
     }
   }
 
