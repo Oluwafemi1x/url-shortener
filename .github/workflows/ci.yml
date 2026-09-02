@@ -31,7 +31,7 @@ jobs:
           test -f styles.css
           test -f app.js
           grep -q "shortenForm" index.html
-          grep -q "https://is.gd/create.php" app.js
+          grep -q "https://spoo.me/" app.js
 
   backend:
     name: Backend tests
