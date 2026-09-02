@@ -2,7 +2,7 @@
 
 A polished, responsive URL-shortening application by **Olawumi Oluwafemi (Pycoder)**.
 
-The live GitHub Pages frontend creates permanent short links through the documented **is.gd URL Shortening API**. The repository also includes an optional **Flask + SQLite backend** for self-hosting your own short-link service with persistent storage and redirect tracking.
+The live GitHub Pages frontend creates permanent short links through the **Spoo.me URL shortening API**, with a secondary provider fallback for ordinary links. The repository also includes an optional **Flask + SQLite backend** for self-hosting your own short-link service with persistent storage and redirect tracking.
 
 ## Live demo
 
@@ -14,7 +14,7 @@ The live GitHub Pages frontend creates permanent short links through the documen
 
 - Create permanent short URLs
 - Optional custom aliases
-- Optional is.gd link statistics
+- Built-in statistics for Spoo.me short links
 - Copy, open and share actions
 - Browser-local recent-link history
 - URL and alias validation
@@ -38,7 +38,7 @@ styles.css
 app.js
 ```
 
-When a visitor submits a URL, `app.js` calls the public is.gd API using its documented JSONP callback support. This avoids the broken `localhost:5000` dependency that existed in the original prototype.
+When a visitor submits a URL, `app.js` first calls Spoo.me directly with a browser POST request. If the primary provider is temporarily unavailable and no custom alias was requested, the frontend can fall back to CleanURI. This avoids both the old `localhost:5000` dependency and the JSONP timeout path.
 
 The frontend stores only recent link history in the visitor's own browser using `localStorage`. It does not upload that local history to this repository.
 
@@ -169,7 +169,7 @@ archive/angular-flask-prototype
 
 ## API provider
 
-The hosted frontend uses the official is.gd API. Their API is intended for reasonable/low-volume use and is rate limited. See their developer documentation for current limits and terms.
+The hosted frontend primarily uses the Spoo.me API and may use CleanURI as a fallback for standard links. Availability, abuse controls and rate limits are controlled by those third-party providers.
 
 ## Security notes
 
