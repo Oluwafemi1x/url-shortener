@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#08111f">
   <meta name="description" content="Pycoder URL Shortener — create clean, permanent short links with optional custom aliases and link statistics.">
   <title>Pycoder URL Shortener</title>
-  <link rel="preconnect" href="https://is.gd">
+  <link rel="preconnect" href="https://spoo.me">
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -44,21 +44,20 @@
               <div>
                 <label for="customAlias">Custom alias <span class="optional">(optional)</span></label>
                 <div class="alias-field">
-                  <span>is.gd/</span>
+                  <span>spoo.me/</span>
                   <input id="customAlias" name="customAlias" type="text" autocomplete="off"
-                    placeholder="pycoder1" minlength="5" maxlength="30" pattern="[A-Za-z0-9_]+">
+                    placeholder="pycoder" minlength="1" maxlength="15" pattern="[A-Za-z0-9]+">
                 </div>
-                <p class="field-hint">5–30 letters, numbers or underscores.</p>
+                <p class="field-hint">Up to 15 letters or numbers.</p>
               </div>
 
-              <label class="toggle-card" for="logStats">
+              <div class="toggle-card" aria-label="Analytics included">
                 <span>
-                  <strong>Link statistics</strong>
-                  <small>Enable is.gd visit statistics</small>
+                  <strong>Analytics included</strong>
+                  <small>Spoo.me links include a statistics page</small>
                 </span>
-                <input id="logStats" type="checkbox">
-                <span class="toggle" aria-hidden="true"></span>
-              </label>
+                <span aria-hidden="true" style="font-size:20px">↗</span>
+              </div>
             </div>
 
             <div id="formError" class="message error" role="alert" hidden></div>
@@ -93,7 +92,7 @@
       </section>
 
       <section class="trust-strip" aria-label="Features">
-        <div><strong>Permanent</strong><span>Links created through is.gd</span></div>
+        <div><strong>Permanent</strong><span>Provider-backed short links</span></div>
         <div><strong>Private history</strong><span>Stored only in this browser</span></div>
         <div><strong>No account</strong><span>Shorten without signing up</span></div>
         <div><strong>Responsive</strong><span>Works on mobile and desktop</span></div>
@@ -134,7 +133,7 @@
 
     <footer>
       <p>Built by <a href="https://github.com/Oluwafemi1x" target="_blank" rel="noreferrer">Olawumi Oluwafemi (Pycoder)</a>.</p>
-      <p>Live shortening is provided through the <a href="https://is.gd/developers.php" target="_blank" rel="noreferrer">is.gd API</a>.</p>
+      <p>Live shortening uses <a href="https://spoo.me/api" target="_blank" rel="noreferrer">Spoo.me</a> with a backup provider for resilience.</p>
     </footer>
   </div>
 
