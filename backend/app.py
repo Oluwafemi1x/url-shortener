@@ -497,6 +497,36 @@ def create_app(test_config: dict | None = None) -> Flask:
 
         return jsonify(serialize_row(row)), 200
 
+    @app.post("/api/qr")
+    def generic_qr():
+        limited = rate_limited("qr-generic", 90, 60)
+        if limited:
+            return limited
+
+        payload = request.get_json(silent=True) or {}
+        try:
+            target_url = normalize_url(payload.get("url"))
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+
+        qr = qrcode.QRCode(version=None, box_size=8, border=4)
+        qr.add_data(target_url)
+        qr.make(fit=True)
+        image = qr.make_image(fill_color="black", back_color="white")
+
+        output = io.BytesIO()
+        image.save(output, format="PNG")
+        output.seek(0)
+
+        response = send_file(
+            output,
+            mimetype="image/png",
+            as_attachment=False,
+            download_name="pycoder-qr.png",
+        )
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
     @app.get("/api/qr/<code>.png")
     def link_qr(code: str):
         limited = rate_limited("qr", 90, 60)
