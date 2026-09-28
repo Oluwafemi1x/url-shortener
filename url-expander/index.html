@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#08111f">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <meta name="description" content="Expand a Pycoder short URL to see its destination, creation date and click count before opening it.">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://oluwafemi1x.github.io/url-shortener/url-expander/">
@@ -12,6 +13,7 @@
   <meta property="og:type" content="website">
   <title>Pycoder URL Expander – Reveal a Short Link Destination</title>
   <link rel="stylesheet" href="../styles.css?v=20260928-4">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Pycoder URL Expander","url":"https://oluwafemi1x.github.io/url-shortener/url-expander/","description":"Reveal the saved destination, creation time and click count behind a Pycoder short URL before opening it.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 </head>
 <body>
   <div class="page-shell">
@@ -23,6 +25,14 @@
     <main class="tool-page">
       <div class="hero-copy"><span class="eyebrow">Free · no signup</span><h1>Pycoder URL Expander</h1><p>Check where a Pycoder short link leads before you open it.</p></div>
       <section class="tool-panel"><form id="expandForm" class="tool-form"><div><label for="expandUrl">Pycoder short URL</label><div class="input-row"><span class="input-icon">⌁</span><input id="expandUrl" type="url" placeholder="https://pyc0.onrender.com/Ab123" required></div></div><div id="toolError" class="message error" hidden></div><button class="primary-button" type="submit">Reveal destination</button></form><div id="expandResult" class="tool-result" hidden><strong>Destination</strong><a id="expandDestination" target="_blank" rel="noreferrer"></a><span>Clicks: <b id="expandClicks"></b></span><span>Created: <b id="expandCreated"></b></span></div></section>
+    <section class="prose">
+      <h2>Check a Pycoder link before opening it</h2>
+      <p>A short URL hides the full destination from view. This expander reveals the destination stored behind a Pycoder short link, along with its creation time and click count, so you can make a more informed decision before visiting it.</p>
+      <h2>Why expansion matters</h2>
+      <p>Short links are convenient, but the compact format means you cannot immediately see the destination domain. Expanding a link is useful when a link came from an unfamiliar sender or when you simply want to confirm that a campaign points to the intended page.</p>
+      <h2>Scope of this tool</h2>
+      <p>For safety, the expander only resolves links created by Pycoder. It does not fetch arbitrary third-party URLs on the server, which reduces the risk of the tool being abused as an open proxy.</p>
+    </section>
     </main>
     <footer><p>Built by <a href="https://github.com/Oluwafemi1x" target="_blank" rel="noreferrer">Olawumi Oluwafemi (Pycoder)</a>.</p><p class="footer-links"><a href="../">URL Shortener</a> · <a href="../privacy/">Privacy</a> · <a href="../report-abuse/">Report abuse</a></p></footer>
   </div>
