@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en" data-tool="expand">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#08111f">
+  <meta name="description" content="Expand a Pycoder short URL to see its destination, creation date and click count before opening it.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://oluwafemi1x.github.io/url-shortener/url-expander/">
+  <meta property="og:title" content="Pycoder URL Expander – Reveal a Short Link Destination">
+  <meta property="og:description" content="Expand a Pycoder short URL to see its destination, creation date and click count before opening it.">
+  <meta property="og:type" content="website">
+  <title>Pycoder URL Expander – Reveal a Short Link Destination</title>
+  <link rel="stylesheet" href="../styles.css?v=20260928-3">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <a class="brand" href="../"><span class="brand-icon">↗</span><span><strong>Pycoder</strong><small>Free Link Tools</small></span></a>
+      <nav class="tool-nav" aria-label="Free tools"><a href="../qr-code-generator/">QR</a><a href="../utm-builder/">UTM</a><a href="../url-expander/">Expand</a><a href="../link-tracker/">Analytics</a></nav>
+      <a class="github-link" href="https://github.com/Oluwafemi1x/url-shortener" target="_blank" rel="noreferrer">GitHub ↗</a>
+    </header>
+    <main class="tool-page">
+      <div class="hero-copy"><span class="eyebrow">Free · no signup</span><h1>Pycoder URL Expander</h1><p>Check where a Pycoder short link leads before you open it.</p></div>
+      <section class="tool-panel"><form id="expandForm" class="tool-form"><div><label for="expandUrl">Pycoder short URL</label><div class="input-row"><span class="input-icon">⌁</span><input id="expandUrl" type="url" placeholder="https://pyc0.onrender.com/Ab123" required></div></div><div id="toolError" class="message error" hidden></div><button class="primary-button" type="submit">Reveal destination</button></form><div id="expandResult" class="tool-result" hidden><strong>Destination</strong><a id="expandDestination" target="_blank" rel="noreferrer"></a><span>Clicks: <b id="expandClicks"></b></span><span>Created: <b id="expandCreated"></b></span></div></section>
+    </main>
+    <footer><p>Built by <a href="https://github.com/Oluwafemi1x" target="_blank" rel="noreferrer">Olawumi Oluwafemi (Pycoder)</a>.</p><p><a href="../">Free URL Shortener</a></p></footer>
+  </div>
+  <script src="../tools.js?v=20260928-1" defer></script>
+</body>
+</html>
