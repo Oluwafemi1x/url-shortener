@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#08111f">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <meta name="description" content="Build UTM campaign URLs for Google Analytics, social media and marketing campaigns, then shorten them for free.">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://oluwafemi1x.github.io/url-shortener/utm-builder/">
@@ -12,6 +13,7 @@
   <meta property="og:type" content="website">
   <title>Free UTM Builder & Campaign URL Generator | Pycoder</title>
   <link rel="stylesheet" href="../styles.css?v=20260928-4">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Pycoder UTM Builder","url":"https://oluwafemi1x.github.io/url-shortener/utm-builder/","description":"Build campaign URLs with UTM source, medium, campaign, term and content parameters, then shorten the result.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 </head>
 <body>
   <div class="page-shell">
@@ -23,6 +25,14 @@
     <main class="tool-page">
       <div class="hero-copy"><span class="eyebrow">Free · no signup</span><h1>Free UTM Builder</h1><p>Create trackable campaign URLs with UTM parameters, then turn the result into a compact Pycoder link.</p></div>
       <section class="tool-panel"><form id="utmForm" class="tool-form"><div><label for="utmUrl">Destination URL</label><div class="input-row"><span class="input-icon">🔗</span><input id="utmUrl" type="url" placeholder="https://example.com/product" required></div></div><div class="field-grid"><div><label for="utmSource">Campaign source</label><div class="input-row"><input id="utmSource" placeholder="facebook"></div></div><div><label for="utmMedium">Campaign medium</label><div class="input-row"><input id="utmMedium" placeholder="social"></div></div><div><label for="utmCampaign">Campaign name</label><div class="input-row"><input id="utmCampaign" placeholder="launch"></div></div><div><label for="utmTerm">Campaign term</label><div class="input-row"><input id="utmTerm" placeholder="optional"></div></div></div><div><label for="utmContent">Campaign content</label><div class="input-row"><input id="utmContent" placeholder="button-a"></div></div><div id="toolError" class="message error" hidden></div><button class="primary-button" type="submit">Build campaign URL</button></form><div id="utmResult" class="tool-result" hidden><strong>Campaign URL</strong><a id="utmOutput" target="_blank" rel="noreferrer"></a><span id="shortUtmOutput"></span><div class="tool-actions"><button id="copyUtm" class="secondary-button" type="button">Copy URL</button><button id="shortenUtm" class="secondary-button" type="button">Shorten it</button></div></div></section>
+    <section class="prose">
+      <h2>Build cleaner campaign tracking links</h2>
+      <p>UTM parameters help analytics tools understand where campaign visits came from. This builder adds the standard source, medium, campaign, term and content parameters to your destination without making you edit query strings manually.</p>
+      <h2>Recommended naming</h2>
+      <p>Use short, consistent lowercase values such as <code>facebook</code> for source, <code>social</code> for medium and a clear campaign name such as <code>september_launch</code>. Consistent naming keeps analytics reports easier to compare.</p>
+      <h2>Shorten after building</h2>
+      <p>Campaign URLs can become long once tracking parameters are attached. Build and verify the full UTM URL first, then use the built-in Shorten button to create a compact Pycoder link you can share in messages, social posts and ads.</p>
+    </section>
     </main>
     <footer><p>Built by <a href="https://github.com/Oluwafemi1x" target="_blank" rel="noreferrer">Olawumi Oluwafemi (Pycoder)</a>.</p><p class="footer-links"><a href="../">URL Shortener</a> · <a href="../privacy/">Privacy</a> · <a href="../report-abuse/">Report abuse</a></p></footer>
   </div>
