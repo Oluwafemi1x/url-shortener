@@ -167,6 +167,7 @@ jobs:
           ! grep -q 'https://cleanuri.com/' /tmp/app.js
 
           for PAGE in qr-code-generator utm-builder url-expander link-tracker privacy terms acceptable-use report-abuse guides/what-is-a-url-shortener guides/how-to-shorten-a-url guides/utm-parameters-explained; do
-            curl --fail --silent --show-error               "https://oluwafemi1x.github.io/url-shortener/$PAGE/" > "/tmp/$PAGE.html"
-            grep -qi '<title>' "/tmp/$PAGE.html"
+            SAFE_NAME="$(printf '%s' "$PAGE" | tr '/' '_')"
+            curl --fail --silent --show-error "https://oluwafemi1x.github.io/url-shortener/$PAGE/" > "/tmp/$SAFE_NAME.html"
+            grep -qi '<title>' "/tmp/$SAFE_NAME.html"
           done
