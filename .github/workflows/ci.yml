@@ -156,6 +156,21 @@ jobs:
             *) echo "Unexpected persistence redirect: $LOCATION"; exit 1 ;;
           esac
 
+
+      - name: Verify owner dashboard security boundary
+        run: |
+          curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5 \
+            -D /tmp/admin-headers.txt \
+            https://pyc0.onrender.com/admin/ > /tmp/admin.html
+
+          grep -q 'Owner dashboard' /tmp/admin.html
+          grep -qi '^x-robots-tag: noindex, nofollow, noarchive' /tmp/admin-headers.txt
+
+          STATUS="$(curl --silent --output /tmp/admin-unauth.json --write-out '%{http_code}' \
+            https://pyc0.onrender.com/api/admin/summary)"
+          test "$STATUS" = "401"
+          grep -q 'Owner authentication required' /tmp/admin-unauth.json
+
       - name: Verify GitHub Pages product pages
         run: |
           curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5             https://oluwafemi1x.github.io/url-shortener/ > /tmp/index.html
