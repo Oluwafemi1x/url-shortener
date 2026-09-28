@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#08111f"/>
+  <circle cx="160" cy="160" r="72" fill="#10223a"/>
+  <path d="M115 170h90l-28 28 24 24 70-70-70-70-24 24 28 28h-90z" fill="#6ee7b7"/>
+  <text x="90" y="330" font-family="Arial, Helvetica, sans-serif" font-size="86" font-weight="700" fill="#ffffff">Pycoder Link Tools</text>
+  <text x="90" y="420" font-family="Arial, Helvetica, sans-serif" font-size="40" fill="#a7b8ca">Shorten · Track · Build QR codes · Create UTM links</text>
+</svg>
