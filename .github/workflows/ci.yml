@@ -31,7 +31,9 @@ jobs:
           test -f styles.css
           test -f app.js
           grep -q "shortenForm" index.html
-          grep -q "https://spoo.me/" app.js
+          grep -q "https://pycoder-url-shortener-api.onrender.com" app.js
+          ! grep -q "https://spoo.me/" app.js
+          ! grep -q "https://cleanuri.com/" app.js
 
   backend:
     name: Backend tests
