@@ -12,7 +12,7 @@
   <meta property="og:url" content="https://oluwafemi1x.github.io/url-shortener/">
   <meta property="og:type" content="website">
   <title>Free URL Shortener — Shorten Links Online | Pycoder</title>
-  <link rel="stylesheet" href="./styles.css?v=20260902-1">
+  <link rel="stylesheet" href="./styles.css?v=20260928-3">
 </head>
 <body>
   <div class="page-shell">
@@ -24,6 +24,12 @@
           <small>URL Shortener</small>
         </span>
       </a>
+      <nav class="tool-nav" aria-label="Free tools">
+        <a href="./qr-code-generator/">QR</a>
+        <a href="./utm-builder/">UTM</a>
+        <a href="./url-expander/">Expand</a>
+        <a href="./link-tracker/">Analytics</a>
+      </nav>
       <a class="github-link" href="https://github.com/Oluwafemi1x/url-shortener" target="_blank" rel="noreferrer">GitHub ↗</a>
     </header>
 
@@ -90,7 +96,8 @@
             <div class="result-actions">
               <button id="shareButton" class="secondary-button" type="button">Share</button>
               <a id="openButton" class="secondary-button" href="#" target="_blank" rel="noreferrer">Open link ↗</a>
-              <a id="statsButton" class="secondary-button" href="#" target="_blank" rel="noreferrer" hidden>View stats ↗</a>
+              <a id="statsButton" class="secondary-button" href="#" hidden>View stats</a>
+              <a id="qrButton" class="secondary-button" href="#" hidden>QR code</a>
             </div>
           </section>
         </div>
@@ -101,6 +108,21 @@
         <div><strong>Private history</strong><span>Stored only in this browser</span></div>
         <div><strong>No account</strong><span>Shorten without signing up</span></div>
         <div><strong>Responsive</strong><span>Works on mobile and desktop</span></div>
+      </section>
+
+      <section class="tools-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Free link tools</span>
+            <h2>More than a URL shortener</h2>
+          </div>
+        </div>
+        <div class="tool-grid">
+          <a class="tool-card" href="./qr-code-generator/"><span>▦</span><strong>QR Code Generator</strong><p>Turn any web URL into a downloadable QR code.</p></a>
+          <a class="tool-card" href="./utm-builder/"><span>↗</span><strong>UTM Builder</strong><p>Build campaign URLs and shorten them in one place.</p></a>
+          <a class="tool-card" href="./url-expander/"><span>⌁</span><strong>URL Expander</strong><p>Reveal the destination behind a Pycoder short link.</p></a>
+          <a class="tool-card" href="./link-tracker/"><span>▥</span><strong>Link Tracker</strong><p>Check clicks, recent activity, devices and referrers.</p></a>
+        </div>
       </section>
 
       <section class="history-section">
@@ -142,6 +164,6 @@
     </footer>
   </div>
 
-  <script src="./app.js?v=20260928-2" defer></script>
+  <script src="./app.js?v=20260928-3" defer></script>
 </body>
 </html>
