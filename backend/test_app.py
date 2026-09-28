@@ -88,6 +88,15 @@ class UrlShortenerApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()["original_url"], "https://example.com/landing")
 
+    def test_generic_qr_endpoint_returns_png(self):
+        response = self.client.post(
+            "/api/qr",
+            json={"url": "https://example.com/page"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "image/png")
+        self.assertTrue(response.data.startswith(b"\\x89PNG"))
+
     def test_qr_endpoint_returns_png(self):
         created = self.client.post(
             "/api/shorten",
