@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://oluwafemi1x.github.io/url-shortener/sitemap.xml
