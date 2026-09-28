@@ -23,7 +23,7 @@ body{
     linear-gradient(180deg,#07101d,#091525 55%,#07101d);
   font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
-button,input{font:inherit}
+button,input,select,textarea{font:inherit}
 button,a{transition:.2s ease}
 a{color:inherit}
 .page-shell{width:min(1160px,calc(100% - 32px));margin:auto}
@@ -72,11 +72,13 @@ label{display:block;font-size:13px;font-weight:750;margin-bottom:8px;color:#dde6
 }
 .input-row:focus-within,.alias-field:focus-within{border-color:rgba(110,231,183,.62);box-shadow:0 0 0 4px rgba(110,231,183,.08)}
 .input-icon{padding-left:15px}
-input{
+input,select,textarea{
   width:100%;border:0;outline:0;color:#f8fafc;background:transparent;padding:15px;
   min-width:0
 }
-input::placeholder{color:#65788f}
+input::placeholder,textarea::placeholder{color:#65788f}
+select option{color:#08111f}
+textarea{min-height:130px;resize:vertical}
 .alias-field span{padding-left:14px;color:#7f91a6;font-size:13px;white-space:nowrap}
 .alias-field input{padding-left:5px}
 .field-hint{font-size:11px;color:#74869b;margin:7px 0 0}
@@ -237,3 +239,16 @@ footer a{color:#b7c4d3}
 .tool-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
 @media(max-width:900px){.tool-grid{grid-template-columns:1fr 1fr}.tool-nav{display:none}}
 @media(max-width:640px){.tool-grid,.field-grid,.metric-grid,.breakdown{grid-template-columns:1fr}.tool-page{padding-top:38px}}
+
+.policy-page,.guide-page{max-width:820px;margin:auto;padding:56px 0 86px}
+.policy-page h1,.guide-page h1{font-size:clamp(40px,6vw,64px)}
+.prose{color:#c2cfdd;font-size:15px;line-height:1.8}
+.prose h2{font-size:26px;margin:36px 0 10px}
+.prose h3{font-size:18px;margin:26px 0 8px}
+.prose p,.prose ul{margin:0 0 16px}
+.prose li{margin:6px 0}
+.prose a{color:#a7f3d0}
+.policy-note{border:1px solid var(--line);border-radius:14px;padding:14px;background:rgba(255,255,255,.025);color:#8fa2b7;font-size:12px}
+.footer-links a{text-decoration:none;color:#a7b8ca}
+.guide-nav{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0 34px}
+.guide-nav a{text-decoration:none;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:11px;color:#bed0e2}
