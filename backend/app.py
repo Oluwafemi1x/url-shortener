@@ -1,22 +1,30 @@
 from __future__ import annotations
 
+import ipaddress
+import io
 import json
 import os
 import re
 import secrets
 import sqlite3
 import string
+import time
+from collections import defaultdict, deque
 from pathlib import Path
+from threading import Lock
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
-from flask import Flask, jsonify, redirect, request
+import qrcode
+from flask import Flask, jsonify, redirect, request, send_file
 from flask_cors import CORS
 
 CODE_PATTERN = re.compile(r"^[A-Za-z0-9_-]{5,30}$")
 ALPHABET = string.ascii_letters + string.digits
 RESERVED_CODES = {"api", "health", "static"}
+RATE_BUCKETS: dict[tuple[str, str], deque[float]] = defaultdict(deque)
+RATE_LOCK = Lock()
 
 
 def normalize_url(value: object) -> str:
@@ -53,6 +61,34 @@ def normalize_url(value: object) -> str:
 
     if len(normalized) > 5000:
         raise ValueError("URL is too long. Maximum length is 5,000 characters.")
+
+    return normalized
+
+
+def validate_destination_url(value: object, blocked_hosts: set[str] | None = None) -> str:
+    normalized = normalize_url(value)
+    parsed = urlsplit(normalized)
+    host = (parsed.hostname or "").rstrip(".").lower()
+
+    blocked = {"localhost", "0.0.0.0"}
+    blocked.update(item.lower() for item in (blocked_hosts or set()) if item)
+    if host in blocked or host.endswith(".localhost") or host.endswith(".local"):
+        raise ValueError("That destination host is not allowed.")
+
+    try:
+        ip = ipaddress.ip_address(host)
+    except ValueError:
+        ip = None
+
+    if ip and (
+        ip.is_private
+        or ip.is_loopback
+        or ip.is_link_local
+        or ip.is_multicast
+        or ip.is_reserved
+        or ip.is_unspecified
+    ):
+        raise ValueError("Private or local network destinations are not allowed.")
 
     return normalized
 
@@ -121,6 +157,7 @@ def create_app(test_config: dict | None = None) -> Flask:
         DATABASE_PATH=default_database,
         PUBLIC_BASE_URL=os.getenv("PUBLIC_BASE_URL", "").rstrip("/"),
         SUPABASE_STORE_URL=os.getenv("SUPABASE_STORE_URL", "").rstrip("/"),
+        STORE_SHARED_SECRET=os.getenv("STORE_SHARED_SECRET", ""),
     )
 
     if test_config:
@@ -138,10 +175,48 @@ def create_app(test_config: dict | None = None) -> Flask:
     def base_url() -> str:
         return app.config.get("PUBLIC_BASE_URL") or request.host_url.rstrip("/")
 
+    def public_host() -> str:
+        return (urlsplit(base_url()).hostname or "").lower()
+
+    def blocked_hosts() -> set[str]:
+        configured = {
+            item.strip().lower()
+            for item in os.getenv("BLOCKED_DESTINATION_HOSTS", "").split(",")
+            if item.strip()
+        }
+        configured.add(public_host())
+        return configured
+
+    def client_id() -> str:
+        forwarded = request.headers.get("X-Forwarded-For", "")
+        if forwarded:
+            return forwarded.split(",", 1)[0].strip()[:80]
+        return (request.remote_addr or "unknown")[:80]
+
+    def rate_limited(scope: str, limit: int, window_seconds: int):
+        now = time.monotonic()
+        key = (scope, client_id())
+        with RATE_LOCK:
+            bucket = RATE_BUCKETS[key]
+            cutoff = now - window_seconds
+            while bucket and bucket[0] <= cutoff:
+                bucket.popleft()
+            if len(bucket) >= limit:
+                retry_after = max(1, int(window_seconds - (now - bucket[0])))
+                return jsonify({
+                    "error": "Too many requests. Please try again shortly."
+                }), 429, {"Retry-After": str(retry_after)}
+            bucket.append(now)
+        return None
+
     def store_call(action: str, **payload):
         url = app.config.get("SUPABASE_STORE_URL")
         if not url:
             return None
+
+        shared_secret = app.config.get("STORE_SHARED_SECRET")
+        if not shared_secret:
+            raise RuntimeError("Persistent store authentication is not configured.")
 
         body = json.dumps({"action": action, **payload}).encode("utf-8")
         req = Request(
@@ -151,6 +226,7 @@ def create_app(test_config: dict | None = None) -> Flask:
             headers={
                 "Content-Type": "application/json",
                 "Accept": "application/json",
+                "X-Pycoder-Store-Key": shared_secret,
             },
         )
 
@@ -231,12 +307,39 @@ def create_app(test_config: dict | None = None) -> Flask:
             ).fetchone()
             return row, False
 
-    def increment_click(code: str):
-        remote = store_call("increment_click", code=code)
+    def referrer_host() -> str | None:
+        value = request.headers.get("Referer", "").strip()
+        if not value:
+            return None
+        try:
+            host = urlsplit(value).hostname
+        except ValueError:
+            return None
+        return host.lower()[:255] if host else None
+
+    def device_type() -> str:
+        ua = request.headers.get("User-Agent", "").lower()
+        if not ua:
+            return "other"
+        if any(token in ua for token in ("bot", "crawler", "spider", "slurp")):
+            return "bot"
+        if "ipad" in ua or "tablet" in ua:
+            return "tablet"
+        if any(token in ua for token in ("iphone", "android", "mobile")):
+            return "mobile"
+        return "desktop"
+
+    def record_click(code: str) -> None:
+        remote = store_call(
+            "record_click",
+            code=code,
+            referrer_host=referrer_host(),
+            device_type=device_type(),
+        )
         if remote is not None:
             status, data = remote
             if status >= 400:
-                raise RuntimeError(data.get("error", "Persistent store request failed."))
+                raise RuntimeError(data.get("error", "Analytics store request failed."))
             return
 
         with connect_database(app.config["DATABASE_PATH"]) as db:
@@ -246,19 +349,48 @@ def create_app(test_config: dict | None = None) -> Flask:
             )
             db.commit()
 
+    def analytics_for(code: str) -> dict | None:
+        remote = store_call("analytics", code=code)
+        if remote is not None:
+            status, data = remote
+            if status == 404:
+                return None
+            if status >= 400:
+                raise RuntimeError(data.get("error", "Analytics store request failed."))
+            return data
+
+        row = find_by_code(code)
+        if not row:
+            return None
+        return {
+            "link": serialize_row(row),
+            "window_days": 30,
+            "daily": [],
+            "devices": [],
+            "referrers": [],
+        }
+
     @app.get("/health")
     def health():
         return jsonify({
             "status": "ok",
             "storage": "supabase" if app.config["SUPABASE_STORE_URL"] else "sqlite",
+            "features": ["shorten", "redirect", "analytics", "qr", "expand"],
         }), 200
 
     @app.post("/api/shorten")
     def shorten_url():
+        limited = rate_limited("shorten", 30, 60)
+        if limited:
+            return limited
+
         payload = request.get_json(silent=True) or {}
 
         try:
-            original_url = normalize_url(payload.get("url"))
+            original_url = validate_destination_url(
+                payload.get("url"),
+                blocked_hosts(),
+            )
             custom_code = validate_custom_code(payload.get("custom_alias"))
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
@@ -296,6 +428,13 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     @app.get("/api/links/<code>")
     def link_details(code: str):
+        limited = rate_limited("details", 120, 60)
+        if limited:
+            return limited
+
+        if not CODE_PATTERN.fullmatch(code):
+            return jsonify({"error": "Short URL not found."}), 404
+
         try:
             row = find_by_code(code)
         except RuntimeError as exc:
@@ -306,18 +445,111 @@ def create_app(test_config: dict | None = None) -> Flask:
 
         return jsonify(serialize_row(row)), 200
 
-    @app.get("/<code>")
-    def follow_short_url(code: str):
-        if code.lower() in RESERVED_CODES:
+    @app.get("/api/analytics/<code>")
+    def link_analytics(code: str):
+        limited = rate_limited("analytics", 90, 60)
+        if limited:
+            return limited
+
+        if not CODE_PATTERN.fullmatch(code):
+            return jsonify({"error": "Short URL not found."}), 404
+
+        try:
+            data = analytics_for(code)
+        except RuntimeError as exc:
+            return jsonify({"error": str(exc)}), 503
+
+        if not data:
+            return jsonify({"error": "Short URL not found."}), 404
+
+        return jsonify(data), 200
+
+    @app.post("/api/expand")
+    def expand_short_url():
+        limited = rate_limited("expand", 90, 60)
+        if limited:
+            return limited
+
+        payload = request.get_json(silent=True) or {}
+        value = payload.get("short_url")
+        if not isinstance(value, str):
+            return jsonify({"error": "Enter a Pycoder short URL."}), 400
+
+        try:
+            parsed = urlsplit(value.strip())
+        except ValueError:
+            return jsonify({"error": "Enter a valid Pycoder short URL."}), 400
+
+        if parsed.scheme not in {"http", "https"} or (parsed.hostname or "").lower() != public_host():
+            return jsonify({"error": "Only pyc0.onrender.com short links can be expanded here."}), 400
+
+        code = parsed.path.strip("/")
+        if "/" in code or not CODE_PATTERN.fullmatch(code):
+            return jsonify({"error": "Enter a valid Pycoder short URL."}), 400
+
+        try:
+            row = find_by_code(code)
+        except RuntimeError as exc:
+            return jsonify({"error": str(exc)}), 503
+
+        if not row:
+            return jsonify({"error": "Short URL not found."}), 404
+
+        return jsonify(serialize_row(row)), 200
+
+    @app.get("/api/qr/<code>.png")
+    def link_qr(code: str):
+        limited = rate_limited("qr", 90, 60)
+        if limited:
+            return limited
+
+        if not CODE_PATTERN.fullmatch(code):
             return jsonify({"error": "Short URL not found."}), 404
 
         try:
             row = find_by_code(code)
-            if not row:
-                return jsonify({"error": "Short URL not found."}), 404
-            increment_click(code)
         except RuntimeError as exc:
             return jsonify({"error": str(exc)}), 503
+
+        if not row:
+            return jsonify({"error": "Short URL not found."}), 404
+
+        qr = qrcode.QRCode(version=None, box_size=8, border=4)
+        qr.add_data(f"{base_url()}/{code}")
+        qr.make(fit=True)
+        image = qr.make_image(fill_color="black", back_color="white")
+
+        output = io.BytesIO()
+        image.save(output, format="PNG")
+        output.seek(0)
+
+        response = send_file(
+            output,
+            mimetype="image/png",
+            as_attachment=False,
+            download_name=f"pycoder-{code}.png",
+        )
+        response.headers["Cache-Control"] = "public, max-age=86400"
+        return response
+
+    @app.get("/<code>")
+    def follow_short_url(code: str):
+        if code.lower() in RESERVED_CODES or not CODE_PATTERN.fullmatch(code):
+            return jsonify({"error": "Short URL not found."}), 404
+
+        try:
+            row = find_by_code(code)
+        except RuntimeError as exc:
+            return jsonify({"error": str(exc)}), 503
+
+        if not row:
+            return jsonify({"error": "Short URL not found."}), 404
+
+        try:
+            record_click(code)
+        except RuntimeError:
+            # Analytics must never prevent the redirect itself.
+            pass
 
         return redirect(row["original_url"], code=302)
 
