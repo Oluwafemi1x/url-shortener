@@ -1,7 +1,6 @@
 "use strict";
 
-const PRIMARY_API = "https://spoo.me/";
-const FALLBACK_API = "https://cleanuri.com/api/v1/shorten";
+const API_BASE = "https://pycoder-url-shortener-api.onrender.com";
 const HISTORY_KEY = "pycoder-url-shortener-history-v3";
 const MAX_HISTORY = 20;
 const REQUEST_TIMEOUT_MS = 10000;
@@ -70,8 +69,8 @@ function validateAlias(value) {
   const alias = String(value || "").trim();
   if (!alias) return "";
 
-  if (!/^[A-Za-z0-9]{1,15}$/.test(alias)) {
-    throw new Error("Custom aliases can contain only letters and numbers, up to 15 characters.");
+  if (!/^[A-Za-z0-9_-]{5,30}$/.test(alias)) {
+    throw new Error("Custom aliases must be 5–30 letters, numbers, underscores or hyphens.");
   }
 
   return alias;
@@ -120,85 +119,36 @@ async function readJsonSafely(response) {
   }
 }
 
-async function shortenWithSpoo(originalUrl, alias) {
-  const body = new URLSearchParams({ url: originalUrl });
-  if (alias) body.set("alias", alias);
-
-  const response = await fetchWithTimeout(PRIMARY_API, {
+async function createShortLink(originalUrl, alias) {
+  const response = await fetchWithTimeout(API_BASE + "/api/shorten", {
     method: "POST",
     mode: "cors",
     headers: {
       "Accept": "application/json",
-      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+      "Content-Type": "application/json"
     },
-    body
-  });
+    body: JSON.stringify({
+      url: originalUrl,
+      custom_alias: alias || null
+    })
+  }, 15000);
 
   const payload = await readJsonSafely(response);
 
   if (!response.ok) {
-    const message =
-      payload.message ||
-      payload.error ||
-      payload.detail ||
-      "The shortening provider could not create this link.";
-
-    const retryable = response.status === 429 || response.status >= 500;
-    throw new ProviderError(String(message), retryable);
-  }
-
-  const shortUrl = payload.short_url;
-  if (typeof shortUrl !== "string" || !/^https:\/\/spoo\.me\/[A-Za-z0-9_-]+$/.test(shortUrl)) {
-    throw new ProviderError("The shortening provider returned an invalid short URL.", true);
-  }
-
-  return { shortUrl, provider: "spoo" };
-}
-
-async function shortenWithCleanUri(originalUrl) {
-  const body = new URLSearchParams({ url: originalUrl });
-
-  const response = await fetchWithTimeout(FALLBACK_API, {
-    method: "POST",
-    mode: "cors",
-    headers: {
-      "Accept": "application/json",
-      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-    },
-    body
-  }, 8000);
-
-  const payload = await readJsonSafely(response);
-
-  if (!response.ok || payload.error) {
-    throw new ProviderError(
-      String(payload.error || "The backup shortening provider could not create this link."),
-      response.status === 429 || response.status >= 500
+    throw new Error(
+      String(payload.error || "Unable to create a short link. Please try again.")
     );
   }
 
-  const shortUrl = payload.result_url;
-  if (typeof shortUrl !== "string" || !/^https:\/\/cleanuri\.com\/[A-Za-z0-9_-]+$/.test(shortUrl)) {
-    throw new ProviderError("The backup provider returned an invalid short URL.");
+  if (typeof payload.short_url !== "string" || !payload.short_url.startsWith(API_BASE + "/")) {
+    throw new Error("The shortening service returned an invalid short URL.");
   }
 
-  return { shortUrl, provider: "cleanuri" };
-}
-
-async function createShortLink(originalUrl, alias) {
-  try {
-    return await shortenWithSpoo(originalUrl, alias);
-  } catch (primaryError) {
-    if (alias || !(primaryError instanceof ProviderError) || !primaryError.retryable) {
-      throw primaryError;
-    }
-
-    try {
-      return await shortenWithCleanUri(originalUrl);
-    } catch {
-      throw new Error("The shortening services are temporarily unreachable from your browser. Please try again shortly.");
-    }
-  }
+  return {
+    shortUrl: payload.short_url,
+    provider: "pycoder"
+  };
 }
 
 function getHistory() {
@@ -211,7 +161,12 @@ function getHistory() {
 }
 
 function isSupportedShortUrl(value) {
-  return /^https:\/\/(spoo\.me|cleanuri\.com|is\.gd)\/[A-Za-z0-9_-]+$/.test(value);
+  try {
+    const parsed = new URL(value);
+    return parsed.origin === API_BASE && /^\/[A-Za-z0-9_-]{5,30}$/.test(parsed.pathname);
+  } catch {
+    return false;
+  }
 }
 
 function isHistoryItem(item) {
@@ -255,15 +210,8 @@ async function copyText(text, button) {
   }, 1400);
 }
 
-function statsUrlFor(entry) {
-  if (entry.provider !== "spoo") return null;
-
-  try {
-    const code = new URL(entry.shortUrl).pathname.replace(/^\/+/, "");
-    return code ? "https://spoo.me/stats/" + encodeURIComponent(code) : null;
-  } catch {
-    return null;
-  }
+function statsUrlFor(_entry) {
+  return null;
 }
 
 function showResult(entry) {
