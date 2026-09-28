@@ -114,7 +114,7 @@ jobs:
           assert len(data["daily"]) == 30
           PY
 
-          curl --fail --silent --show-error             -H 'Content-Type: application/json'             -d "{"short_url":"https://pyc0.onrender.com/$CODE"}"             https://pyc0.onrender.com/api/expand > /tmp/expand.json
+          printf '{"short_url":"https://pyc0.onrender.com/%s"}' "$CODE" | curl --fail --silent --show-error -H 'Content-Type: application/json' --data-binary @- https://pyc0.onrender.com/api/expand > /tmp/expand.json
           python - <<'PY'
           import json
           data=json.load(open("/tmp/expand.json"))
