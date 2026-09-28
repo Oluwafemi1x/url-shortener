@@ -17,6 +17,8 @@ class UrlShortenerApiTests(unittest.TestCase):
                 "PUBLIC_BASE_URL": "https://sho.rt",
                 "SUPABASE_STORE_URL": "",
                 "STORE_SHARED_SECRET": "",
+                "ADMIN_PASSWORD": "test-owner-password",
+                "SESSION_COOKIE_SECURE": False,
             }
         )
         self.client = self.app.test_client()
@@ -136,6 +138,35 @@ class UrlShortenerApiTests(unittest.TestCase):
         response = self.client.get(f"/api/analytics/{created['code']}")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()["link"]["code"], "stats01")
+
+
+    def test_admin_dashboard_is_noindex(self):
+        response = self.client.get("/admin/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("noindex", response.headers.get("X-Robots-Tag", ""))
+        self.assertIn(b"Owner dashboard", response.data)
+
+    def test_admin_api_requires_login(self):
+        response = self.client.get("/api/admin/summary")
+        self.assertEqual(response.status_code, 401)
+
+    def test_admin_login_rejects_wrong_password(self):
+        response = self.client.post(
+            "/api/admin/login",
+            json={"password": "wrong-password"},
+        )
+        self.assertEqual(response.status_code, 401)
+
+    def test_admin_login_sets_owner_session(self):
+        login = self.client.post(
+            "/api/admin/login",
+            json={"password": "test-owner-password"},
+        )
+        self.assertEqual(login.status_code, 200)
+
+        response = self.client.get("/api/admin/summary")
+        self.assertEqual(response.status_code, 503)
+        self.assertIn("persistent storage", response.get_json()["error"].lower())
 
 
 if __name__ == "__main__":
