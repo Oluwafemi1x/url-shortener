@@ -33,13 +33,27 @@ jobs:
           key_location = os.environ["KEY_LOCATION"]
           sitemap_url = os.environ["SITEMAP_URL"]
 
-          with urllib.request.urlopen(key_location, timeout=30) as response:
-              body = response.read().decode("utf-8").strip()
-              if body != key:
-                  raise SystemExit("IndexNow key file does not match.")
+          import time
 
-          with urllib.request.urlopen(sitemap_url, timeout=30) as response:
-              xml = response.read()
+          def fetch_with_retry(url, attempts=12, delay=10):
+              last_error = None
+              for attempt in range(1, attempts + 1):
+                  try:
+                      with urllib.request.urlopen(url, timeout=30) as response:
+                          return response.read()
+                  except Exception as exc:
+                      last_error = exc
+                      if attempt == attempts:
+                          raise
+                      print(f"Waiting for published asset ({attempt}/{attempts}): {exc}")
+                      time.sleep(delay)
+              raise last_error
+
+          body = fetch_with_retry(key_location).decode("utf-8").strip()
+          if body != key:
+              raise SystemExit("IndexNow key file does not match.")
+
+          xml = fetch_with_retry(sitemap_url)
 
           root = ET.fromstring(xml)
           ns = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
@@ -66,13 +80,23 @@ jobs:
               method="POST",
           )
 
-          try:
-              with urllib.request.urlopen(request, timeout=30) as response:
-                  status = response.status
-                  print(f"IndexNow response: {status}; submitted URLs: {len(urls)}")
-                  if status not in (200, 202):
-                      raise SystemExit(f"Unexpected IndexNow response {status}")
-          except urllib.error.HTTPError as exc:
-              print(exc.read().decode("utf-8", "replace"))
-              raise
+          def submit():
+              try:
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      return response.status
+              except urllib.error.HTTPError as exc:
+                  print(exc.read().decode("utf-8", "replace"))
+                  raise
+
+          status = submit()
+          print(f"IndexNow response: {status}; submitted URLs: {len(urls)}")
+
+          if status == 202:
+              print("Key validation pending; retrying once after 20 seconds.")
+              time.sleep(20)
+              status = submit()
+              print(f"IndexNow retry response: {status}")
+
+          if status not in (200, 202):
+              raise SystemExit(f"Unexpected IndexNow response {status}")
           PY
