@@ -10,6 +10,7 @@ import sqlite3
 import string
 import time
 from collections import defaultdict, deque
+from contextlib import closing
 from pathlib import Path
 from threading import Lock
 from urllib.error import HTTPError, URLError
@@ -127,7 +128,7 @@ def initialize_database(path: str) -> None:
     if database_path.parent != Path("."):
         database_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with connect_database(path) as db:
+    with closing(connect_database(path)) as db:
         db.execute(
             """
             CREATE TABLE IF NOT EXISTS links (
@@ -261,7 +262,7 @@ def create_app(test_config: dict | None = None) -> Flask:
                 raise RuntimeError(data.get("error", "Persistent store request failed."))
             return data.get("link")
 
-        with connect_database(app.config["DATABASE_PATH"]) as db:
+        with closing(connect_database(app.config["DATABASE_PATH"])) as db:
             return db.execute(
                 "SELECT * FROM links WHERE code = ?",
                 (code,),
@@ -275,7 +276,7 @@ def create_app(test_config: dict | None = None) -> Flask:
                 raise RuntimeError(data.get("error", "Persistent store request failed."))
             return data.get("link")
 
-        with connect_database(app.config["DATABASE_PATH"]) as db:
+        with closing(connect_database(app.config["DATABASE_PATH"])) as db:
             return db.execute(
                 "SELECT * FROM links WHERE original_url = ? ORDER BY id ASC LIMIT 1",
                 (original_url,),
@@ -291,7 +292,7 @@ def create_app(test_config: dict | None = None) -> Flask:
                 raise RuntimeError(data.get("error", "Persistent store request failed."))
             return data.get("link"), False
 
-        with connect_database(app.config["DATABASE_PATH"]) as db:
+        with closing(connect_database(app.config["DATABASE_PATH"])) as db:
             try:
                 db.execute(
                     "INSERT INTO links (code, original_url) VALUES (?, ?)",
@@ -342,7 +343,7 @@ def create_app(test_config: dict | None = None) -> Flask:
                 raise RuntimeError(data.get("error", "Analytics store request failed."))
             return
 
-        with connect_database(app.config["DATABASE_PATH"]) as db:
+        with closing(connect_database(app.config["DATABASE_PATH"])) as db:
             db.execute(
                 "UPDATE links SET clicks = clicks + 1 WHERE code = ?",
                 (code,),
