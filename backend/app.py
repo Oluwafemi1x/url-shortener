@@ -244,6 +244,12 @@ def create_app(test_config: dict | None = None) -> Flask:
         except (URLError, TimeoutError) as exc:
             raise RuntimeError("Persistent store is temporarily unavailable.") from exc
 
+    def row_value(row, key: str, default=None):
+        try:
+            return row[key]
+        except (KeyError, IndexError, TypeError):
+            return default
+
     def serialize_row(row, created: bool = False) -> dict:
         return {
             "code": row["code"],
@@ -252,6 +258,7 @@ def create_app(test_config: dict | None = None) -> Flask:
             "clicks": row["clicks"],
             "created_at": row["created_at"],
             "created": created,
+            "blocked": bool(row_value(row, "is_blocked", False)),
         }
 
     def find_by_code(code: str):
@@ -401,6 +408,8 @@ def create_app(test_config: dict | None = None) -> Flask:
                 existing = find_by_code(custom_code)
 
                 if existing:
+                    if row_value(existing, "is_blocked", False):
+                        return jsonify({"error": "This destination has been disabled for safety or policy reasons."}), 403
                     if existing["original_url"] == original_url:
                         return jsonify(serialize_row(existing, created=False)), 200
                     return jsonify({"error": "That custom alias is already in use."}), 409
@@ -412,6 +421,8 @@ def create_app(test_config: dict | None = None) -> Flask:
 
             existing = find_by_url(original_url)
             if existing:
+                if row_value(existing, "is_blocked", False):
+                    return jsonify({"error": "This destination has been disabled for safety or policy reasons."}), 403
                 return jsonify(serialize_row(existing, created=False)), 200
 
             for _ in range(30):
@@ -631,6 +642,11 @@ def create_app(test_config: dict | None = None) -> Flask:
 
         if not row:
             return jsonify({"error": "Short URL not found."}), 404
+
+        if row_value(row, "is_blocked", False):
+            return jsonify({
+                "error": "This short link has been disabled for safety or policy reasons."
+            }), 410
 
         try:
             record_click(code)
