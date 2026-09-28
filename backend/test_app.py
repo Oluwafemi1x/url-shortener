@@ -48,6 +48,14 @@ class UrlShortenerApiTests(unittest.TestCase):
         self.assertEqual(redirect_response.status_code, 302)
         self.assertEqual(redirect_response.headers["Location"], "https://example.com/docs")
 
+    def test_serialized_links_are_not_blocked_by_default(self):
+        response = self.client.post(
+            "/api/shorten",
+            json={"url": "https://example.com/default"},
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertFalse(response.get_json()["blocked"])
+
     def test_rejects_unsupported_protocol(self):
         response = self.client.post(
             "/api/shorten",
