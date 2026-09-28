@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#08111f">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
   <meta name="description" content="Track clicks on a Pycoder short link with 30-day activity, device breakdown and top referrers.">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://oluwafemi1x.github.io/url-shortener/link-tracker/">
@@ -12,6 +13,7 @@
   <meta property="og:type" content="website">
   <title>Free Link Tracker & URL Click Analytics | Pycoder</title>
   <link rel="stylesheet" href="../styles.css?v=20260928-4">
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Pycoder Link Tracker","url":"https://oluwafemi1x.github.io/url-shortener/link-tracker/","description":"View total clicks, 30-day activity, device categories and top referrers for a Pycoder short link.","applicationCategory":"UtilitiesApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 </head>
 <body>
   <div class="page-shell">
@@ -23,6 +25,14 @@
     <main class="tool-page">
       <div class="hero-copy"><span class="eyebrow">Free · no signup</span><h1>Free Link Tracker</h1><p>See how many times your Pycoder link was opened and understand recent traffic without an account.</p></div>
       <section class="tool-panel"><form id="trackerForm" class="tool-form"><div><label for="trackerUrl">Pycoder short URL</label><div class="input-row"><span class="input-icon">▥</span><input id="trackerUrl" type="url" placeholder="https://pyc0.onrender.com/Ab123" required></div></div><div id="toolError" class="message error" hidden></div><button class="primary-button" type="submit">View analytics</button></form><div id="trackerResult" class="tool-result" hidden><a id="trackerDestination" target="_blank" rel="noreferrer"></a><div class="metric-grid"><div class="metric"><strong id="metricClicks">0</strong><span>Total clicks</span></div><div class="metric"><strong id="metricCode">—</strong><span>Short code</span></div><div class="metric"><strong id="metricCreated">—</strong><span>Created</span></div></div><strong>Last 30 days</strong><div id="dailyChart" class="chart" aria-label="30-day click chart"></div><div class="breakdown"><div class="breakdown-card"><h3>Devices</h3><div id="deviceRows"></div></div><div class="breakdown-card"><h3>Top referrers</h3><div id="referrerRows"></div></div></div></div></section>
+    <section class="prose">
+      <h2>Understand how a short link performs</h2>
+      <p>The Link Tracker shows total redirects plus recent daily activity for a Pycoder short URL. It also summarizes broad device categories and referring website hostnames when a browser provides that information.</p>
+      <h2>Useful for campaign comparison</h2>
+      <p>Create different short links for different placements, then compare their click activity. This can help you understand whether a newsletter, social post, QR code or partner referral is sending more traffic.</p>
+      <h2>Privacy-conscious analytics</h2>
+      <p>The product analytics database is designed around lightweight event data such as time, device category and referrer hostname rather than building personal user profiles. See the Privacy Policy for the current data-handling details.</p>
+    </section>
     </main>
     <footer><p>Built by <a href="https://github.com/Oluwafemi1x" target="_blank" rel="noreferrer">Olawumi Oluwafemi (Pycoder)</a>.</p><p class="footer-links"><a href="../">URL Shortener</a> · <a href="../privacy/">Privacy</a> · <a href="../report-abuse/">Report abuse</a></p></footer>
   </div>
