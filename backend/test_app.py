@@ -145,6 +145,9 @@ class UrlShortenerApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("noindex", response.headers.get("X-Robots-Tag", ""))
         self.assertIn(b"Owner dashboard", response.data)
+        self.assertIn(b"Traffic \xc2\xb7 last 30 days", response.data)
+        self.assertIn(b"Recent clicks", response.data)
+        self.assertIn(b"System probe", response.data)
 
     def test_admin_api_requires_login(self):
         response = self.client.get("/api/admin/summary")
