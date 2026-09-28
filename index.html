@@ -4,9 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#08111f">
-  <meta name="description" content="Pycoder URL Shortener — create clean, permanent short links with optional custom aliases and link statistics.">
-  <title>Pycoder URL Shortener</title>
-  <link rel="preconnect" href="https://spoo.me">
+  <meta name="description" content="Free URL shortener by Pycoder. Create clean short links with optional custom aliases, no signup required.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://oluwafemi1x.github.io/url-shortener/">
+  <meta property="og:title" content="Pycoder URL Shortener — Free Link Shortener">
+  <meta property="og:description" content="Shorten long URLs into clean, shareable links for free. No signup required.">
+  <meta property="og:url" content="https://oluwafemi1x.github.io/url-shortener/">
+  <meta property="og:type" content="website">
+  <title>Free URL Shortener — Shorten Links Online | Pycoder</title>
   <link rel="stylesheet" href="./styles.css?v=20260902-1">
 </head>
 <body>
@@ -44,17 +49,17 @@
               <div>
                 <label for="customAlias">Custom alias <span class="optional">(optional)</span></label>
                 <div class="alias-field">
-                  <span>spoo.me/</span>
+                  <span>Custom:</span>
                   <input id="customAlias" name="customAlias" type="text" autocomplete="off"
-                    placeholder="pycoder" minlength="1" maxlength="15" pattern="[A-Za-z0-9]+">
+                    placeholder="pycoder" minlength="5" maxlength="30" pattern="[A-Za-z0-9_-]+">
                 </div>
-                <p class="field-hint">Up to 15 letters or numbers.</p>
+                <p class="field-hint">5–30 letters, numbers, underscores or hyphens.</p>
               </div>
 
               <div class="toggle-card" aria-label="Analytics included">
                 <span>
-                  <strong>Analytics included</strong>
-                  <small>Spoo.me links include a statistics page</small>
+                  <strong>Pycoder-powered links</strong>
+                  <small>Links are created by our own shortening service</small>
                 </span>
                 <span aria-hidden="true" style="font-size:20px">↗</span>
               </div>
@@ -92,7 +97,7 @@
       </section>
 
       <section class="trust-strip" aria-label="Features">
-        <div><strong>Permanent</strong><span>Provider-backed short links</span></div>
+        <div><strong>Reliable</strong><span>First-party shortening backend</span></div>
         <div><strong>Private history</strong><span>Stored only in this browser</span></div>
         <div><strong>No account</strong><span>Shorten without signing up</span></div>
         <div><strong>Responsive</strong><span>Works on mobile and desktop</span></div>
@@ -125,7 +130,7 @@
         </div>
         <div class="steps">
           <article><span>01</span><h3>Paste your URL</h3><p>Enter the destination link you want to make easier to share.</p></article>
-          <article><span>02</span><h3>Customize if you want</h3><p>Pick an available alias and optionally enable visit statistics.</p></article>
+          <article><span>02</span><h3>Customize if you want</h3><p>Choose an available custom alias to make the link easier to remember.</p></article>
           <article><span>03</span><h3>Copy and share</h3><p>Your permanent short URL is returned immediately and saved locally.</p></article>
         </div>
       </section>
@@ -133,10 +138,10 @@
 
     <footer>
       <p>Built by <a href="https://github.com/Oluwafemi1x" target="_blank" rel="noreferrer">Olawumi Oluwafemi (Pycoder)</a>.</p>
-      <p>Live shortening uses <a href="https://spoo.me/api" target="_blank" rel="noreferrer">Spoo.me</a> with a backup provider for resilience.</p>
+      <p>Free URL shortening powered by the Pycoder backend.</p>
     </footer>
   </div>
 
-  <script src="./app.js?v=20260902-1" defer></script>
+  <script src="./app.js?v=20260928-1" defer></script>
 </body>
 </html>
