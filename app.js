@@ -1,6 +1,6 @@
 "use strict";
 
-const API_BASE = "https://pycoder-url-shortener-api.onrender.com";
+const API_BASE = "https://pyc0.onrender.com";
 const HISTORY_KEY = "pycoder-url-shortener-history-v3";
 const MAX_HISTORY = 20;
 const REQUEST_TIMEOUT_MS = 10000;
