@@ -55,3 +55,40 @@ jobs:
 
       - name: Run API tests
         run: python -m unittest backend.test_app -v
+
+  production-smoke:
+    name: Production smoke test
+    runs-on: ubuntu-latest
+    needs: [frontend, backend]
+    steps:
+      - name: Verify live backend health
+        run: |
+          curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5             https://pycoder-url-shortener-api.onrender.com/health | grep -q '"status":"ok"'
+
+      - name: Create and verify a real short link
+        run: |
+          curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5             -D /tmp/headers.txt             -H 'Origin: https://oluwafemi1x.github.io'             -H 'Content-Type: application/json'             -d '{"url":"https://github.com/Oluwafemi1x/url-shortener"}'             https://pycoder-url-shortener-api.onrender.com/api/shorten > /tmp/shorten.json
+
+          grep -qi '^access-control-allow-origin: https://oluwafemi1x.github.io' /tmp/headers.txt
+
+          SHORT_URL="$(python -c 'import json; print(json.load(open("/tmp/shorten.json"))["short_url"])')"
+          test -n "$SHORT_URL"
+
+          STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' "$SHORT_URL")"
+          test "$STATUS" = "302"
+
+          LOCATION="$(curl --silent --head "$SHORT_URL" | tr -d '\r' | awk 'BEGIN{IGNORECASE=1} /^Location:/{sub(/^Location:[[:space:]]*/,""); print; exit}')"
+          case "$LOCATION" in
+            https://github.com/Oluwafemi1x/url-shortener*) ;;
+            *) echo "Unexpected redirect: $LOCATION"; exit 1 ;;
+          esac
+
+      - name: Verify GitHub Pages is serving the new frontend
+        run: |
+          curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5             https://oluwafemi1x.github.io/url-shortener/ > /tmp/index.html
+          grep -q 'app.js?v=20260928-1' /tmp/index.html
+
+          curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5             'https://oluwafemi1x.github.io/url-shortener/app.js?v=20260928-1' > /tmp/app.js
+          grep -q 'https://pycoder-url-shortener-api.onrender.com' /tmp/app.js
+          ! grep -q 'https://spoo.me/' /tmp/app.js
+          ! grep -q 'https://cleanuri.com/' /tmp/app.js
