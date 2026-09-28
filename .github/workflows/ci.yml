@@ -31,7 +31,7 @@ jobs:
           test -f styles.css
           test -f app.js
           grep -q "shortenForm" index.html
-          grep -q "https://pycoder-url-shortener-api.onrender.com" app.js
+          grep -q "https://pyc0.onrender.com" app.js
           ! grep -q "https://spoo.me/" app.js
           ! grep -q "https://cleanuri.com/" app.js
 
@@ -63,11 +63,11 @@ jobs:
     steps:
       - name: Verify live backend health
         run: |
-          curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5             https://pycoder-url-shortener-api.onrender.com/health | grep -q '"status":"ok"'
+          curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5             https://pyc0.onrender.com/health | grep -q '"status":"ok"'
 
       - name: Create and verify a real short link
         run: |
-          curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5             -D /tmp/headers.txt             -H 'Origin: https://oluwafemi1x.github.io'             -H 'Content-Type: application/json'             -d '{"url":"https://github.com/Oluwafemi1x/url-shortener"}'             https://pycoder-url-shortener-api.onrender.com/api/shorten > /tmp/shorten.json
+          curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5             -D /tmp/headers.txt             -H 'Origin: https://oluwafemi1x.github.io'             -H 'Content-Type: application/json'             -d '{"url":"https://github.com/Oluwafemi1x/url-shortener"}'             https://pyc0.onrender.com/api/shorten > /tmp/shorten.json
 
           grep -qi '^access-control-allow-origin: https://oluwafemi1x.github.io' /tmp/headers.txt
 
@@ -86,9 +86,9 @@ jobs:
       - name: Verify GitHub Pages is serving the new frontend
         run: |
           curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5             https://oluwafemi1x.github.io/url-shortener/ > /tmp/index.html
-          grep -q 'app.js?v=20260928-1' /tmp/index.html
+          grep -q 'app.js?v=20260928-2' /tmp/index.html
 
-          curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5             'https://oluwafemi1x.github.io/url-shortener/app.js?v=20260928-1' > /tmp/app.js
-          grep -q 'https://pycoder-url-shortener-api.onrender.com' /tmp/app.js
+          curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5             'https://oluwafemi1x.github.io/url-shortener/app.js?v=20260928-2' > /tmp/app.js
+          grep -q 'https://pyc0.onrender.com' /tmp/app.js
           ! grep -q 'https://spoo.me/' /tmp/app.js
           ! grep -q 'https://cleanuri.com/' /tmp/app.js
