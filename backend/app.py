@@ -73,7 +73,7 @@ def validate_custom_code(value: object) -> str | None:
     return code
 
 
-def generate_code(length: int = 7) -> str:
+def generate_code(length: int = 5) -> str:
     return "".join(secrets.choice(ALPHABET) for _ in range(length))
 
 
