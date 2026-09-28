@@ -376,7 +376,7 @@ def create_app(test_config: dict | None = None) -> Flask:
         return jsonify({
             "status": "ok",
             "storage": "supabase" if app.config["SUPABASE_STORE_URL"] else "sqlite",
-            "features": ["shorten", "redirect", "analytics", "qr", "expand"],
+            "features": ["shorten", "redirect", "analytics", "qr", "expand", "abuse-reporting"],
         }), 200
 
     @app.post("/api/shorten")
@@ -497,6 +497,62 @@ def create_app(test_config: dict | None = None) -> Flask:
             return jsonify({"error": "Short URL not found."}), 404
 
         return jsonify(serialize_row(row)), 200
+
+    @app.post("/api/report-abuse")
+    def report_abuse():
+        limited = rate_limited("abuse-report", 8, 3600)
+        if limited:
+            return limited
+
+        payload = request.get_json(silent=True) or {}
+        short_url = payload.get("short_url")
+        reason = payload.get("reason")
+        details = payload.get("details")
+
+        if not isinstance(short_url, str):
+            return jsonify({"error": "Enter the Pycoder short URL you want to report."}), 400
+
+        try:
+            parsed = urlsplit(short_url.strip())
+        except ValueError:
+            return jsonify({"error": "Enter a valid Pycoder short URL."}), 400
+
+        if parsed.scheme not in {"http", "https"} or (parsed.hostname or "").lower() != public_host():
+            return jsonify({"error": "Only Pycoder short links can be reported here."}), 400
+
+        code = parsed.path.strip("/")
+        if "/" in code or not CODE_PATTERN.fullmatch(code):
+            return jsonify({"error": "Enter a valid Pycoder short URL."}), 400
+
+        allowed_reasons = {"phishing", "malware", "spam", "scam", "copyright", "other"}
+        if reason not in allowed_reasons:
+            return jsonify({"error": "Choose a valid report reason."}), 400
+
+        if details is not None and not isinstance(details, str):
+            return jsonify({"error": "Report details must be text."}), 400
+
+        try:
+            row = find_by_code(code)
+            if not row:
+                return jsonify({"error": "Short URL not found."}), 404
+
+            remote = store_call(
+                "report_abuse",
+                short_url=f"{base_url()}/{code}",
+                code=code,
+                reason=reason,
+                details=(details or "").strip()[:2000],
+            )
+            if remote is None:
+                return jsonify({"error": "Abuse reporting requires persistent storage."}), 503
+
+            status, data = remote
+            if status >= 400:
+                return jsonify({"error": data.get("error", "Unable to submit report.")}), 503
+        except RuntimeError as exc:
+            return jsonify({"error": str(exc)}), 503
+
+        return jsonify({"ok": True, "message": "Report received for review."}), 201
 
     @app.post("/api/qr")
     def generic_qr():
