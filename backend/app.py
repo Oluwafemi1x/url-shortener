@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hmac
 import ipaddress
 import io
 import json
@@ -18,12 +19,12 @@ from urllib.parse import urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 import qrcode
-from flask import Flask, jsonify, redirect, request, send_file
+from flask import Flask, jsonify, redirect, request, send_file, session
 from flask_cors import CORS
 
 CODE_PATTERN = re.compile(r"^[A-Za-z0-9_-]{5,30}$")
 ALPHABET = string.ascii_letters + string.digits
-RESERVED_CODES = {"api", "health", "static"}
+RESERVED_CODES = {"api", "health", "static", "admin"}
 RATE_BUCKETS: dict[tuple[str, str], deque[float]] = defaultdict(deque)
 RATE_LOCK = Lock()
 
@@ -159,6 +160,12 @@ def create_app(test_config: dict | None = None) -> Flask:
         PUBLIC_BASE_URL=os.getenv("PUBLIC_BASE_URL", "").rstrip("/"),
         SUPABASE_STORE_URL=os.getenv("SUPABASE_STORE_URL", "").rstrip("/"),
         STORE_SHARED_SECRET=os.getenv("STORE_SHARED_SECRET", ""),
+        ADMIN_PASSWORD=os.getenv("ADMIN_PASSWORD", ""),
+        SECRET_KEY=os.getenv("ADMIN_SESSION_SECRET") or secrets.token_urlsafe(48),
+        SESSION_COOKIE_SECURE=True,
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Strict",
+        PERMANENT_SESSION_LIFETIME=8 * 60 * 60,
     )
 
     if test_config:
@@ -383,7 +390,7 @@ def create_app(test_config: dict | None = None) -> Flask:
         return jsonify({
             "status": "ok",
             "storage": "supabase" if app.config["SUPABASE_STORE_URL"] else "sqlite",
-            "features": ["shorten", "redirect", "analytics", "qr", "expand", "abuse-reporting"],
+            "features": ["shorten", "redirect", "analytics", "qr", "expand", "abuse-reporting", "admin-dashboard"],
         }), 200
 
     @app.post("/api/shorten")
@@ -564,6 +571,136 @@ def create_app(test_config: dict | None = None) -> Flask:
             return jsonify({"error": str(exc)}), 503
 
         return jsonify({"ok": True, "message": "Report received for review."}), 201
+
+
+    def admin_required():
+        if session.get("pycoder_admin") is True:
+            return None
+        return jsonify({"error": "Owner authentication required."}), 401
+
+    @app.get("/admin/")
+    def admin_dashboard():
+        response = send_file(
+            Path(__file__).resolve().parent / "admin_dashboard.html",
+            mimetype="text/html",
+        )
+        response.headers["Cache-Control"] = "no-store, private"
+        response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; "
+            "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none';"
+        )
+        return response
+
+    @app.post("/api/admin/login")
+    def admin_login():
+        limited = rate_limited("admin-login", 5, 900)
+        if limited:
+            return limited
+
+        configured = app.config.get("ADMIN_PASSWORD", "")
+        payload = request.get_json(silent=True) or {}
+        supplied = payload.get("password", "")
+
+        if not configured:
+            return jsonify({"error": "Owner login is not configured."}), 503
+
+        if not isinstance(supplied, str) or not hmac.compare_digest(supplied, configured):
+            return jsonify({"error": "Incorrect owner password."}), 401
+
+        session.clear()
+        session["pycoder_admin"] = True
+        session.permanent = True
+        return jsonify({"ok": True}), 200
+
+    @app.post("/api/admin/logout")
+    def admin_logout():
+        session.clear()
+        return jsonify({"ok": True}), 200
+
+    @app.get("/api/admin/summary")
+    def admin_summary():
+        denied = admin_required()
+        if denied:
+            return denied
+        remote = store_call("admin_summary")
+        if remote is None:
+            return jsonify({"error": "Owner dashboard requires persistent storage."}), 503
+        status, data = remote
+        return jsonify(data), status
+
+    @app.get("/api/admin/links")
+    def admin_links():
+        denied = admin_required()
+        if denied:
+            return denied
+        remote = store_call(
+            "admin_links",
+            q=request.args.get("q", "")[:300],
+            blocked=request.args.get("blocked", "")[:10],
+        )
+        if remote is None:
+            return jsonify({"error": "Owner dashboard requires persistent storage."}), 503
+        status, data = remote
+        return jsonify(data), status
+
+    @app.get("/api/admin/reports")
+    def admin_reports():
+        denied = admin_required()
+        if denied:
+            return denied
+        remote = store_call(
+            "admin_reports",
+            status=request.args.get("status", "open")[:20],
+        )
+        if remote is None:
+            return jsonify({"error": "Owner dashboard requires persistent storage."}), 503
+        status, data = remote
+        return jsonify(data), status
+
+    @app.post("/api/admin/links/<code>/block")
+    def admin_set_block(code: str):
+        denied = admin_required()
+        if denied:
+            return denied
+        if not CODE_PATTERN.fullmatch(code):
+            return jsonify({"error": "Invalid short code."}), 400
+        payload = request.get_json(silent=True) or {}
+        blocked = payload.get("blocked")
+        if not isinstance(blocked, bool):
+            return jsonify({"error": "blocked must be true or false."}), 400
+        reason = payload.get("reason")
+        if reason is not None and not isinstance(reason, str):
+            return jsonify({"error": "reason must be text."}), 400
+        remote = store_call(
+            "admin_set_block",
+            code=code,
+            blocked=blocked,
+            reason=(reason or "").strip()[:500] if blocked else None,
+        )
+        if remote is None:
+            return jsonify({"error": "Owner dashboard requires persistent storage."}), 503
+        status, data = remote
+        return jsonify(data), status
+
+    @app.post("/api/admin/reports/<int:report_id>/status")
+    def admin_set_report_status(report_id: int):
+        denied = admin_required()
+        if denied:
+            return denied
+        payload = request.get_json(silent=True) or {}
+        value = payload.get("status")
+        if value not in {"open", "reviewed", "dismissed", "blocked"}:
+            return jsonify({"error": "Invalid report status."}), 400
+        remote = store_call(
+            "admin_set_report_status",
+            report_id=report_id,
+            status=value,
+        )
+        if remote is None:
+            return jsonify({"error": "Owner dashboard requires persistent storage."}), 503
+        status, data = remote
+        return jsonify(data), status
 
     @app.post("/api/qr")
     def generic_qr():
