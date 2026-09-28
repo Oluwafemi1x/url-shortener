@@ -206,6 +206,45 @@ function renderRows(container, rows, emptyText) {
   }
 }
 
+async function setupAbuse() {
+  const form = document.getElementById("abuseForm");
+  if (!form) return;
+
+  const input = document.getElementById("abuseUrl");
+  const reason = document.getElementById("abuseReason");
+  const details = document.getElementById("abuseDetails");
+  const error = document.getElementById("toolError");
+  const success = document.getElementById("abuseSuccess");
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    setMessage(error, "");
+    success.hidden = true;
+
+    try {
+      const shortUrl = input.value.trim();
+      pycoderCode(shortUrl);
+
+      await jsonRequest(API_BASE + "/api/report-abuse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          short_url: shortUrl,
+          reason: reason.value,
+          details: details.value.trim()
+        })
+      });
+
+      success.hidden = false;
+      form.reset();
+    } catch (err) {
+      setMessage(error, err.message, true);
+    }
+  });
+
+  prefill("abuseUrl");
+}
+
 async function setupTracker() {
   const form = document.getElementById("trackerForm");
   if (!form) return;
@@ -253,4 +292,5 @@ document.addEventListener("DOMContentLoaded", () => {
   setupUtm();
   setupExpander();
   setupTracker();
+  setupAbuse();
 });
