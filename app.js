@@ -3,7 +3,7 @@
 const API_BASE = "https://pyc0.onrender.com";
 const HISTORY_KEY = "pycoder-url-shortener-history-v3";
 const MAX_HISTORY = 20;
-const REQUEST_TIMEOUT_MS = 10000;
+const REQUEST_TIMEOUT_MS = 60000;
 
 const form = document.getElementById("shortenForm");
 const longUrlInput = document.getElementById("longUrl");
@@ -20,6 +20,7 @@ const copyButton = document.getElementById("copyButton");
 const shareButton = document.getElementById("shareButton");
 const openButton = document.getElementById("openButton");
 const statsButton = document.getElementById("statsButton");
+const qrButton = document.getElementById("qrButton");
 
 const historyList = document.getElementById("historyList");
 const emptyHistory = document.getElementById("emptyHistory");
@@ -100,9 +101,9 @@ async function fetchWithTimeout(url, options = {}, timeoutMs = REQUEST_TIMEOUT_M
     return await fetch(url, { ...options, signal: controller.signal });
   } catch (error) {
     if (error && error.name === "AbortError") {
-      throw new ProviderError("The shortening provider did not respond in time.", true);
+      throw new ProviderError("The shortening service did not respond in time.", true);
     }
-    throw new ProviderError("Unable to reach the shortening provider. Check your connection and try again.", true);
+    throw new ProviderError("Unable to reach the shortening service. Check your connection and try again.", true);
   } finally {
     window.clearTimeout(timeoutId);
   }
@@ -115,7 +116,7 @@ async function readJsonSafely(response) {
   try {
     return JSON.parse(text);
   } catch {
-    throw new ProviderError("The shortening provider returned an unexpected response.", response.status >= 500);
+    throw new ProviderError("The shortening service returned an unexpected response.", response.status >= 500);
   }
 }
 
@@ -210,8 +211,12 @@ async function copyText(text, button) {
   }, 1400);
 }
 
-function statsUrlFor(_entry) {
-  return null;
+function statsUrlFor(entry) {
+  return "./link-tracker/?url=" + encodeURIComponent(entry.shortUrl);
+}
+
+function qrPageUrlFor(entry) {
+  return "./qr-code-generator/?url=" + encodeURIComponent(entry.shortUrl);
 }
 
 function showResult(entry) {
@@ -229,6 +234,9 @@ function showResult(entry) {
     statsButton.hidden = true;
     statsButton.removeAttribute("href");
   }
+
+  qrButton.href = qrPageUrlFor(entry);
+  qrButton.hidden = false;
 
   resultPanel.hidden = false;
   resultPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -272,11 +280,14 @@ function createHistoryItem(entry) {
   if (statsUrl) {
     const stats = document.createElement("a");
     stats.href = statsUrl;
-    stats.target = "_blank";
-    stats.rel = "noreferrer";
-    stats.textContent = "Stats ↗";
+    stats.textContent = "Stats";
     actions.append(stats);
   }
+
+  const qr = document.createElement("a");
+  qr.href = qrPageUrlFor(entry);
+  qr.textContent = "QR";
+  actions.append(qr);
 
   article.append(links, actions);
   return article;
