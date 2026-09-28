@@ -83,6 +83,17 @@ jobs:
             *) echo "Unexpected redirect: $LOCATION"; exit 1 ;;
           esac
 
+      - name: Verify Supabase persistence probe
+        run: |
+          STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' https://pyc0.onrender.com/PST01)"
+          test "$STATUS" = "302"
+
+          LOCATION="$(curl --silent --head https://pyc0.onrender.com/PST01 | tr -d '\r' | awk 'BEGIN{IGNORECASE=1} /^Location:/{sub(/^Location:[[:space:]]*/,""); print; exit}')"
+          case "$LOCATION" in
+            https://github.com/Oluwafemi1x/url-shortener*) ;;
+            *) echo "Unexpected persistence redirect: $LOCATION"; exit 1 ;;
+          esac
+
       - name: Verify GitHub Pages is serving the new frontend
         run: |
           curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5             https://oluwafemi1x.github.io/url-shortener/ > /tmp/index.html
