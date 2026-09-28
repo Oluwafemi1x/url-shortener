@@ -37,11 +37,20 @@ jobs:
           test -f utm-builder/index.html
           test -f url-expander/index.html
           test -f link-tracker/index.html
+          test -f privacy/index.html
+          test -f terms/index.html
+          test -f acceptable-use/index.html
+          test -f report-abuse/index.html
+          test -f guides/what-is-a-url-shortener/index.html
+          test -f guides/how-to-shorten-a-url/index.html
+          test -f guides/utm-parameters-explained/index.html
           test -f sitemap.xml
           grep -q "shortenForm" index.html
           grep -q "https://pyc0.onrender.com" app.js
           grep -q "https://pyc0.onrender.com" tools.js
-          grep -q "app.js?v=20260928-3" index.html
+          grep -q "app.js?v=20260928-4" index.html
+          grep -q '"@type": "WebApplication"' index.html
+          grep -q "report-abuse/" index.html
           ! grep -q "https://spoo.me/" app.js
           ! grep -q "https://cleanuri.com/" app.js
 
@@ -127,6 +136,15 @@ jobs:
           assert data == b"\x89PNG\r\n\x1a\n"
           PY
 
+      - name: Verify abuse controls and blocked-link enforcement
+        run: |
+          STATUS="$(curl --silent --output /tmp/blocked.json --write-out '%{http_code}' https://pyc0.onrender.com/BLK01)"
+          test "$STATUS" = "410"
+          grep -q 'disabled for safety or policy reasons' /tmp/blocked.json
+
+          STATUS="$(curl --silent --output /tmp/abuse-invalid.json --write-out '%{http_code}'             -H 'Content-Type: application/json'             -d '{"short_url":"https://example.com/not-pycoder","reason":"spam"}'             https://pyc0.onrender.com/api/report-abuse)"
+          test "$STATUS" = "400"
+
       - name: Verify Supabase persistence probe
         run: |
           STATUS="$(curl --silent --output /dev/null --write-out '%{http_code}' https://pyc0.onrender.com/PST01)"
@@ -141,14 +159,14 @@ jobs:
       - name: Verify GitHub Pages product pages
         run: |
           curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5             https://oluwafemi1x.github.io/url-shortener/ > /tmp/index.html
-          grep -q 'app.js?v=20260928-3' /tmp/index.html
+          grep -q 'app.js?v=20260928-4' /tmp/index.html
 
-          curl --fail --silent --show-error             'https://oluwafemi1x.github.io/url-shortener/app.js?v=20260928-3' > /tmp/app.js
+          curl --fail --silent --show-error             'https://oluwafemi1x.github.io/url-shortener/app.js?v=20260928-4' > /tmp/app.js
           grep -q 'https://pyc0.onrender.com' /tmp/app.js
           ! grep -q 'https://spoo.me/' /tmp/app.js
           ! grep -q 'https://cleanuri.com/' /tmp/app.js
 
-          for PAGE in qr-code-generator utm-builder url-expander link-tracker; do
+          for PAGE in qr-code-generator utm-builder url-expander link-tracker privacy terms acceptable-use report-abuse guides/what-is-a-url-shortener guides/how-to-shorten-a-url guides/utm-parameters-explained; do
             curl --fail --silent --show-error               "https://oluwafemi1x.github.io/url-shortener/$PAGE/" > "/tmp/$PAGE.html"
             grep -qi '<title>' "/tmp/$PAGE.html"
           done
