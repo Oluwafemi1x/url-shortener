@@ -88,6 +88,16 @@ class UrlShortenerApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json()["original_url"], "https://example.com/landing")
 
+    def test_abuse_report_rejects_non_pycoder_url(self):
+        response = self.client.post(
+            "/api/report-abuse",
+            json={
+                "short_url": "https://example.com/not-ours",
+                "reason": "spam",
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+
     def test_generic_qr_endpoint_returns_png(self):
         response = self.client.post(
             "/api/qr",
