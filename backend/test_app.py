@@ -95,7 +95,7 @@ class UrlShortenerApiTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.mimetype, "image/png")
-        self.assertTrue(response.data.startswith(b"\\x89PNG"))
+        self.assertTrue(response.data.startswith(b"\x89PNG"))
 
     def test_qr_endpoint_returns_png(self):
         created = self.client.post(
@@ -106,7 +106,7 @@ class UrlShortenerApiTests(unittest.TestCase):
         response = self.client.get(f"/api/qr/{created['code']}.png")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.mimetype, "image/png")
-        self.assertTrue(response.data.startswith(b"\\x89PNG"))
+        self.assertTrue(response.data.startswith(b"\x89PNG"))
 
     def test_analytics_endpoint_exists(self):
         created = self.client.post(
