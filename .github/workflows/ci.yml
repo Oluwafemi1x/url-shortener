@@ -44,6 +44,9 @@ jobs:
           test -f guides/what-is-a-url-shortener/index.html
           test -f guides/how-to-shorten-a-url/index.html
           test -f guides/utm-parameters-explained/index.html
+          test -f free-url-shortener-no-signup/index.html
+          test -f url-shortener-with-click-tracking/index.html
+          test -f free-qr-code-url-shortener/index.html
           test -f sitemap.xml
           grep -q "shortenForm" index.html
           grep -q "https://pyc0.onrender.com" app.js
@@ -181,7 +184,7 @@ jobs:
           ! grep -q 'https://spoo.me/' /tmp/app.js
           ! grep -q 'https://cleanuri.com/' /tmp/app.js
 
-          for PAGE in qr-code-generator utm-builder url-expander link-tracker privacy terms acceptable-use report-abuse guides/what-is-a-url-shortener guides/how-to-shorten-a-url guides/utm-parameters-explained; do
+          for PAGE in qr-code-generator utm-builder url-expander link-tracker privacy terms acceptable-use report-abuse guides/what-is-a-url-shortener guides/how-to-shorten-a-url guides/utm-parameters-explained free-url-shortener-no-signup url-shortener-with-click-tracking free-qr-code-url-shortener; do
             SAFE_NAME="$(printf '%s' "$PAGE" | tr '/' '_')"
             curl --fail --silent --show-error "https://oluwafemi1x.github.io/url-shortener/$PAGE/" > "/tmp/$SAFE_NAME.html"
             grep -qi '<title>' "/tmp/$SAFE_NAME.html"
