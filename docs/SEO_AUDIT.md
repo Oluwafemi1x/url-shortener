@@ -33,7 +33,7 @@ Deployment, live browser, IndexNow and sitemap results are recorded below after 
 
 ## Limits that remain external
 
-Technical checks cannot promise search ranking or a crawl date. Bing account verification needs account access. Search Console's available inspection wrapper does not expose Google's selected canonical or rendered HTML; native inspection is needed for those details. GitHub Pages branch hosting cannot issue custom server redirects for `/index.html`; self-canonicals and consistent internal links identify the preferred slash URLs. Genuine third-party community mentions cannot be manufactured and have not been claimed.
+Technical checks cannot promise search ranking or a crawl date. Bing ownership is verified; crawl, indexing and report availability remain Bing's decisions. Search Console's available inspection wrapper does not expose Google's selected canonical or rendered HTML; native inspection is needed for those details. GitHub Pages branch hosting cannot issue custom server redirects for `/index.html`; self-canonicals and consistent internal links identify the preferred slash URLs. Genuine third-party community mentions cannot be manufactured and have not been claimed.
 
 ## Publication and live verification results
 
@@ -47,5 +47,7 @@ Technical checks cannot promise search ranking or a crawl date. Bing account ver
 - New guide hub, custom-alias and social-sharing pages added to the indexing tracker. Two named search-query clusters and branded terms are configured.
 - Live browser: shortening produced `https://pyc0.onrender.com/EeIUW` for the public example destination; copy returned that exact URL; QR loaded as a 296-pixel PNG; the short URL returned HTTP 302 to the intended destination.
 - Desktop screenshot checked for legible, unclipped layout. Mobile rules were improved, but a narrow-viewport browser test could not be completed: the local browser executable was unavailable and the cloud browser did not expose viewport resizing. Mobile visual acceptance remains unverified.
-- Native Bing Webmaster Tools opens its signed-out page. Bing account verification and reporting require the user's sign-in; no account reporting has been claimed.
+- Bing Webmaster Tools ownership verified on 4 October 2026 using the published `msvalidate.01` homepage tag. Sitemap submitted successfully; status Processing, zero reported errors/warnings, zero discovered URLs at submission. Reports may take up to 48 hours.
+- Bing homepage inspection: **Discovered but not crawled**, discovered 24 September 2026. Bing live test: **URL can be indexed by Bing**, **No SEO/GEO issues found**, two markup types detected. Eligibility is not indexing.
+- Ownership-tag source commit: `953a39a2d32899222148ec37e05100eb698d10ce`. [CI passed](https://github.com/Oluwafemi1x/url-shortener/actions/runs/37219674389); [publication and live validation passed](https://github.com/Oluwafemi1x/url-shortener/actions/runs/37219710807); [Pages deployment passed](https://github.com/Oluwafemi1x/url-shortener/actions/runs/37219723672). Independent 18-page live audit passed after deployment.
 - The GitHub profile now includes a descriptive link to the live shortener. No community postings or fabricated third-party mentions were used.

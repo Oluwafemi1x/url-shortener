@@ -53,3 +53,10 @@ Bing Webmaster Tools is not configured in the connected GSC Wizard account. To g
 Run `python scripts/seo.py --live` after a deployment. Preserve its result alongside the IndexNow receipt. Inspect the homepage, the use-case pages and the guide hub in Search Console after they have been published. Request indexing through Google's own UI only where warranted; do not continually resubmit unchanged URLs.
 
 Compare impressions, query rows, clicks and CTR for successive settled 28-day periods. Google metrics lag; never treat missing fresh data as a confirmed ranking loss. Inspect a page's canonical and crawl state when impressions disappear. The API wrapper currently returns verdict/crawl fields without Google's selected-canonical or rendered-page detail, so those fields require the native URL Inspection UI for full confirmation.
+
+
+### Bing verification completed — 4 October 2026
+
+The URL-prefix property is verified using the homepage `msvalidate.01` tag. Keep that tag in place. The canonical sitemap was submitted in Bing Webmaster Tools and is Processing with zero reported errors or warnings at submission. Bing advises that new reports may take up to 48 hours.
+
+Homepage index record: Discovered but not crawled (discovered 24 September). Live URL test: URL can be indexed by Bing; no SEO/GEO issues found; two markup types detected. Wait for crawl and report data; this is not a claim of indexing or ranking. Automated IndexNow notifications remain limited to changed public pages.
