@@ -55,12 +55,13 @@
     <main>
       <section class="hero">
         <div class="hero-copy">
-          <span class="eyebrow">Fast · clean · permanent links</span>
-          <h1>Turn long links into <span>short, shareable URLs.</span></h1>
+          <span class="eyebrow">Free · no signup required</span>
+          <h1>Free URL shortener <span>for shareable links.</span></h1>
           <p>Create a short URL in seconds, choose a custom alias when available, copy it instantly, and keep a private history in your browser.</p>
         </div>
 
         <div class="shortener-card">
+          <noscript><p class="field-hint">Enable JavaScript to create a short link. You can still read the guides and help below.</p></noscript>
           <form id="shortenForm" novalidate>
             <label for="longUrl">Long URL</label>
             <div class="input-row">
@@ -194,8 +195,27 @@
         <div class="steps">
           <article><span>01</span><h3>Paste your URL</h3><p>Enter the destination link you want to make easier to share.</p></article>
           <article><span>02</span><h3>Customize if you want</h3><p>Choose an available custom alias to make the link easier to remember.</p></article>
-          <article><span>03</span><h3>Copy and share</h3><p>Your permanent short URL is returned immediately and saved locally.</p></article>
+          <article><span>03</span><h3>Copy and share</h3><p>Copy your short URL and share it. Your recent links are saved in this browser.</p></article>
         </div>
+      </section>
+
+      <section class="tools-section prose" aria-labelledby="shortener-faq">
+        <h2 id="shortener-faq">Questions about shortening URLs</h2>
+        <h3>How do I shorten a URL?</h3>
+        <p>Paste your HTTP or HTTPS address into the Long URL field, optionally enter a custom alias, then select Shorten URL. Copy the result to share it. See the <a href="./guides/how-to-shorten-a-url/">step-by-step URL shortening guide</a> for help.</p>
+        <h3>Is this URL shortener free without signup?</h3>
+        <p>Yes. The public shortening tool requires no account. Your recent-link history is stored in this browser; it will not follow you to another device. Learn more about <a href="./free-url-shortener-no-signup/">shortening links without signup</a>.</p>
+        <h3>Can I shorten a link for WhatsApp or social media?</h3>
+        <p>You can share the resulting URL in a message or post. A short link redirects to the original page, so that page's access requirements still apply. Shortening a private document does not make it public.</p>
+        <h3>Can I use a custom alias?</h3>
+        <p>Enter an available alias of 5–30 letters, numbers, underscores or hyphens before shortening. An alias changes the link's code, not its domain. Already-used aliases cannot be claimed again.</p>
+        <h3>Does a short link hide private information?</h3>
+        <p>No. A short link is a redirect, not a password or access restriction. Avoid shortening URLs containing passwords, access tokens or confidential information. Read <a href="./privacy/">how Pycoder handles link data</a>.</p>
+        <h3>Can I check a short link before opening it?</h3>
+        <p>Use the <a href="./url-expander/">Pycoder URL Expander</a> to see the saved destination of a Pycoder link. Checking the destination does not guarantee that a website is safe.</p>
+        <h3>Can I keep campaign tracking parameters?</h3>
+        <p>Add campaign parameters to the destination before shortening it. Our <a href="./guides/utm-parameters-explained/">guide to UTM parameters</a> explains how source, medium and campaign tags work.</p>
+        <p>New to short links? Read <a href="./guides/what-is-a-url-shortener/">what a URL shortener does</a> and when a full URL may be more useful.</p>
       </section>
     </main>
 
