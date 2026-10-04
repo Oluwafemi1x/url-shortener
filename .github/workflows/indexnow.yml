@@ -1,102 +1,25 @@
 name: IndexNow
-
 on:
   workflow_dispatch:
-  push:
-    branches: [gh-pages]
-    paths:
-      - "**/*.html"
-      - "sitemap.xml"
-      - "c4c0dc80b94f7dcc55c8791ba1277caf.txt"
-
 permissions:
   contents: read
-
 jobs:
   submit:
-    name: Notify IndexNow
     runs-on: ubuntu-latest
     steps:
-      - name: Submit sitemap URLs
-        env:
-          INDEXNOW_KEY: "c4c0dc80b94f7dcc55c8791ba1277caf"
-          KEY_LOCATION: "https://oluwafemi1x.github.io/url-shortener/c4c0dc80b94f7dcc55c8791ba1277caf.txt"
-          SITEMAP_URL: "https://oluwafemi1x.github.io/url-shortener/sitemap.xml"
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Verify published source and send one explicit batch
         run: |
-          python - <<'PY'
-          import json
-          import os
-          import urllib.request
-          import xml.etree.ElementTree as ET
-
-          key = os.environ["INDEXNOW_KEY"]
-          key_location = os.environ["KEY_LOCATION"]
-          sitemap_url = os.environ["SITEMAP_URL"]
-
-          import time
-
-          def fetch_with_retry(url, attempts=12, delay=10):
-              last_error = None
-              for attempt in range(1, attempts + 1):
-                  try:
-                      with urllib.request.urlopen(url, timeout=30) as response:
-                          return response.read()
-                  except Exception as exc:
-                      last_error = exc
-                      if attempt == attempts:
-                          raise
-                      print(f"Waiting for published asset ({attempt}/{attempts}): {exc}")
-                      time.sleep(delay)
-              raise last_error
-
-          body = fetch_with_retry(key_location).decode("utf-8").strip()
-          if body != key:
-              raise SystemExit("IndexNow key file does not match.")
-
-          xml = fetch_with_retry(sitemap_url)
-
-          root = ET.fromstring(xml)
-          ns = {"sm": "http://www.sitemaps.org/schemas/sitemap/0.9"}
-          urls = [
-              node.text.strip()
-              for node in root.findall("sm:url/sm:loc", ns)
-              if node.text and node.text.strip().startswith("https://oluwafemi1x.github.io/url-shortener/")
-          ]
-
-          if not urls:
-              raise SystemExit("No IndexNow URLs found in sitemap.")
-
-          payload = json.dumps({
-              "host": "oluwafemi1x.github.io",
-              "key": key,
-              "keyLocation": key_location,
-              "urlList": urls,
-          }).encode("utf-8")
-
-          request = urllib.request.Request(
-              "https://api.indexnow.org/indexnow",
-              data=payload,
-              headers={"Content-Type": "application/json; charset=utf-8"},
-              method="POST",
-          )
-
-          def submit():
-              try:
-                  with urllib.request.urlopen(request, timeout=30) as response:
-                      return response.status
-              except urllib.error.HTTPError as exc:
-                  print(exc.read().decode("utf-8", "replace"))
-                  raise
-
-          status = submit()
-          print(f"IndexNow response: {status}; submitted URLs: {len(urls)}")
-
-          if status == 202:
-              print("Key validation pending; retrying once after 20 seconds.")
-              time.sleep(20)
-              status = submit()
-              print(f"IndexNow retry response: {status}")
-
-          if status not in (200, 202):
-              raise SystemExit(f"Unexpected IndexNow response {status}")
-          PY
+          python scripts/seo.py --live
+          python scripts/indexnow.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: indexnow-receipt
+          path: /tmp/indexnow-receipt.json

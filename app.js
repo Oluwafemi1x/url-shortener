@@ -132,7 +132,7 @@ async function createShortLink(originalUrl, alias) {
       url: originalUrl,
       custom_alias: alias || null
     })
-  }, 15000);
+  }, REQUEST_TIMEOUT_MS);
 
   const payload = await readJsonSafely(response);
 
@@ -180,12 +180,16 @@ function isHistoryItem(item) {
 function saveHistory(entry) {
   const history = getHistory().filter((item) => item.shortUrl !== entry.shortUrl);
   history.unshift(entry);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(0, MAX_HISTORY)));
+  } catch {
+    // A blocked/full history store must not turn successful shortening into an error.
+  }
   renderHistory();
 }
 
 function clearHistory() {
-  localStorage.removeItem(HISTORY_KEY);
+  try { localStorage.removeItem(HISTORY_KEY); } catch { /* Storage can be disabled. */ }
   renderHistory();
 }
 
@@ -200,8 +204,12 @@ async function copyText(text, button) {
     textarea.style.opacity = "0";
     document.body.appendChild(textarea);
     textarea.select();
-    document.execCommand("copy");
+    const copied = document.execCommand("copy");
     textarea.remove();
+    if (!copied) {
+      showError("Copy was blocked. Select the short URL and copy it manually.");
+      return;
+    }
   }
 
   const previous = button.textContent;
@@ -322,6 +330,9 @@ form.addEventListener("submit", async (event) => {
   }
 
   setLoading(true);
+  const waitingMessage = window.setTimeout(() => {
+    buttonLabel.textContent = "Still connecting… please wait";
+  }, 8000);
 
   try {
     const result = await createShortLink(originalUrl, alias);
@@ -337,6 +348,7 @@ form.addEventListener("submit", async (event) => {
   } catch (error) {
     showError(error instanceof Error ? error.message : "Something went wrong. Please try again.");
   } finally {
+    window.clearTimeout(waitingMessage);
     setLoading(false);
   }
 });

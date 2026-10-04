@@ -20,15 +20,16 @@ function pycoderCode(value) {
   return code;
 }
 
-async function jsonRequest(url, options = {}) {
+async function serviceRequest(url, options = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 60000);
   try {
     const response = await fetch(url, { ...options, signal: controller.signal });
-    const contentType = response.headers.get("content-type") || "";
-    const payload = contentType.includes("application/json") ? await response.json() : null;
-    if (!response.ok) throw new Error(payload?.error || "Request failed. Please try again.");
-    return { response, payload };
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      throw new Error(payload.error || "Request failed. Please try again.");
+    }
+    return response;
   } catch (error) {
     if (error?.name === "AbortError") throw new Error("The service took too long to respond. Please try again.");
     throw error;
@@ -44,8 +45,21 @@ function setMessage(element, text, isError = false) {
   element.className = isError ? "message error" : "message";
 }
 
+async function jsonRequest(url, options = {}) {
+  const response = await serviceRequest(url, options);
+  const payload = await response.json().catch(() => null);
+  if (!payload || typeof payload !== "object") throw new Error("The service returned an unexpected response.");
+  return { response, payload };
+}
+
 async function copyText(text, button) {
-  await navigator.clipboard.writeText(text);
+  try { await navigator.clipboard.writeText(text); } catch {
+    const area = document.createElement("textarea");
+    area.value = text; area.style.position = "fixed"; area.style.opacity = "0";
+    document.body.appendChild(area); area.select();
+    const copied = document.execCommand("copy"); area.remove();
+    if (!copied) { setMessage(document.getElementById("toolError"), "Copy was blocked. Select the URL and copy it manually.", true); return; }
+  }
   const old = button.textContent;
   button.textContent = "Copied!";
   setTimeout(() => button.textContent = old, 1200);
@@ -71,9 +85,11 @@ async function setupQr() {
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     setMessage(error, "");
+    const submit = form.querySelector("button[type=submit]");
+    submit.disabled = true;
     try {
       const url = normalizeWebUrl(input.value);
-      const response = await fetch(API_BASE + "/api/qr", {
+      const response = await serviceRequest(API_BASE + "/api/qr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url })
@@ -91,7 +107,7 @@ async function setupQr() {
       result.hidden = false;
     } catch (err) {
       setMessage(error, err.message, true);
-    }
+    } finally { submit.disabled = false; }
   });
 
   if (prefill("qrUrl")) form.requestSubmit();

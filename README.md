@@ -1,191 +1,83 @@
 # Pycoder URL Shortener
 
-A polished, responsive URL-shortening application by **Olawumi Oluwafemi (Pycoder)**.
+[Use the free URL shortener](https://oluwafemi1x.github.io/url-shortener/) · [Read the guides](https://oluwafemi1x.github.io/url-shortener/guides/)
 
-The live GitHub Pages frontend creates permanent short links through the **Spoo.me URL shortening API**, with a secondary provider fallback for ordinary links. The repository also includes an optional **Flask + SQLite backend** for self-hosting your own short-link service with persistent storage and redirect tracking.
+Pycoder turns a long HTTP or HTTPS address into a short redirect, with optional custom aliases and no signup. The static frontend runs on GitHub Pages and calls our Flask service at `https://pyc0.onrender.com`. Production link storage uses a Supabase service; the backend also supports SQLite for local development. The current frontend uses no third-party shortening-provider fallback.
 
-## Live demo
+## Try it
 
-**https://oluwafemi1x.github.io/url-shortener/**
+1. Paste your destination into the [shortening form](https://oluwafemi1x.github.io/url-shortener/#shortenForm).
+2. Optionally choose an available alias of 5–30 letters, numbers, underscores or hyphens.
+3. Copy the result and open it once to verify the destination.
+4. Use the [QR generator](https://oluwafemi1x.github.io/url-shortener/qr-code-generator/) or [click tracker](https://oluwafemi1x.github.io/url-shortener/link-tracker/) when needed.
 
-> If GitHub Pages has not been enabled yet, select the `gh-pages` branch and `/ (root)` under **Settings → Pages**.
+Generated codes have five characters. An identical destination may reuse an existing link. To compare campaign channels, add distinct UTM tags before shortening each destination. Link history is stored in the visitor's browser; disabled or full browser storage does not prevent shortening.
 
-## Features
+## Free tools and guides
 
-- Create permanent short URLs
-- Optional custom aliases
-- Built-in statistics for Spoo.me short links
-- Copy, open and share actions
-- Browser-local recent-link history
-- URL and alias validation
-- Responsive mobile/desktop interface
-- Graceful network and API error handling
-- Persistent Flask + SQLite self-hosted backend
-- Parameterized SQL queries
-- Collision-safe short-code generation
-- Redirect click tracking
-- Automated CI checks
+| Task | Page |
+| --- | --- |
+| Create a short link without an account | [No-signup shortener](https://oluwafemi1x.github.io/url-shortener/free-url-shortener-no-signup/) |
+| Choose a readable code | [Custom URL aliases](https://oluwafemi1x.github.io/url-shortener/custom-url-shortener/) |
+| Share a campaign | [WhatsApp and social media guide](https://oluwafemi1x.github.io/url-shortener/url-shortener-for-social-media/) |
+| Build campaign tags | [UTM builder](https://oluwafemi1x.github.io/url-shortener/utm-builder/) |
+| Reveal a Pycoder destination | [URL expander](https://oluwafemi1x.github.io/url-shortener/url-expander/) |
+| Learn the workflow | [How to shorten a URL](https://oluwafemi1x.github.io/url-shortener/guides/how-to-shorten-a-url/) |
 
-## Architecture
+A custom alias changes the code, not the domain. Public tools cannot reassign an existing alias or edit its destination. Short links do not protect private information; the privacy, acceptable-use and reporting pages explain current behavior. Analytics are counts of opens, not verified people or sales. Continued redirect availability depends on the service and destination remaining available.
 
-### GitHub Pages frontend
+## Local development
 
-The live frontend is intentionally static so it can run reliably on GitHub Pages.
-
-```text
-index.html
-styles.css
-app.js
-```
-
-When a visitor submits a URL, `app.js` first calls Spoo.me directly with a browser POST request. If the primary provider is temporarily unavailable and no custom alias was requested, the frontend can fall back to CleanURI. This avoids both the old `localhost:5000` dependency and the JSONP timeout path.
-
-The frontend stores only recent link history in the visitor's own browser using `localStorage`. It does not upload that local history to this repository.
-
-### Optional self-hosted Python API
-
-The `backend/` directory contains a standalone Flask service with SQLite persistence.
-
-```text
-backend/
-├── __init__.py
-├── app.py
-├── requirements.txt
-└── test_app.py
-```
-
-API endpoints:
-
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| `GET` | `/health` | Health check |
-| `POST` | `/api/shorten` | Create or reuse a short URL |
-| `GET` | `/api/links/<code>` | Read link metadata |
-| `GET` | `/<code>` | Redirect to the original URL |
-
-Example request:
-
-```bash
-curl -X POST http://127.0.0.1:5000/api/shorten \
-  -H "Content-Type: application/json" \
-  -d '{"url":"https://example.com/a/long/path","custom_alias":"pycoder1"}'
-```
-
-Example response:
-
-```json
-{
-  "code": "pycoder1",
-  "short_url": "http://127.0.0.1:5000/pycoder1",
-  "original_url": "https://example.com/a/long/path",
-  "clicks": 0,
-  "created": true
-}
-```
-
-## Run the frontend locally
-
-No build step is required.
+Serve the static files without a build step:
 
 ```bash
 python -m http.server 8080
 ```
 
-Open:
+For the Python API:
 
-```text
-http://127.0.0.1:8080
-```
-
-## Run the Flask backend locally
-
-Create and activate a virtual environment, then install the backend requirements.
-
-### Windows PowerShell
-
-```powershell
+```bash
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+# Windows: .venv\Scripts\Activate.ps1
+# macOS/Linux: source .venv/bin/activate
 pip install -r backend/requirements.txt
 python -m backend.app
 ```
 
-The API will start at:
+The API starts on port 5000. Main endpoints: `POST /api/shorten`, `GET /<code>`, `POST /api/expand`, `GET /api/analytics/<code>`, `POST /api/qr`, and `POST /api/report-abuse`. Owner APIs require authentication.
 
-```text
-http://127.0.0.1:5000
-```
+| Variable | Purpose |
+| --- | --- |
+| `PUBLIC_BASE_URL` | Public short-link origin |
+| `CORS_ORIGINS` | Allowed frontend origins; restrict in production |
+| `DATABASE_PATH` | Local SQLite file |
+| `SUPABASE_STORE_URL` | Existing persistent storage service endpoint |
+| `STORE_SHARED_SECRET` | Storage service authentication; keep private |
+| `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET` | Owner access and session configuration |
+| `PORT` | Server port |
 
-## Backend configuration
-
-Optional environment variables:
-
-| Variable | Default | Description |
-| --- | --- | --- |
-| `DATABASE_PATH` | `backend/url_shortener.db` | SQLite database file |
-| `PUBLIC_BASE_URL` | Request host | Public base URL used in returned short links |
-| `CORS_ORIGINS` | `*` | Comma-separated allowed frontend origins |
-| `PORT` | `5000` | Flask development server port |
-
-For a public production deployment, set `PUBLIC_BASE_URL` and restrict `CORS_ORIGINS`.
-
-## Tests
-
-Run:
+## Validate and publish
 
 ```bash
 python -m unittest backend.test_app -v
+node --check app.js
+node --check tools.js
+python scripts/seo.py --write
+python scripts/seo.py
 ```
 
-The test suite checks:
+Run `--write` after editing or adding public pages; it updates the content manifest and sitemap dates only when page content changes. Commit both generated files. The source checker verifies every public page's canonical, unique metadata, structured data, local resources and reachability from the homepage.
 
-- health endpoint
-- URL normalization
-- short-link creation
-- redirect behavior
-- unsupported protocol rejection
-- custom alias conflicts
+After CI passes on `main`, **Publish tested Pages** exports only public assets to `gh-pages`, explicitly requests a Pages build, checks the exact deployed source and notifies IndexNow of changed public HTML URLs. It preserves receipts as a workflow artifact. The manual IndexNow workflow is for an intentional full batch, not repeated submissions of unchanged URLs.
 
-## Why the old implementation was replaced
-
-The previous Angular frontend called:
-
-```text
-http://localhost:5000/api/shorten
+```bash
+python scripts/seo.py --live
 ```
 
-That only works when a Flask server is running on the visitor's own computer. The backend also used an in-memory dictionary, so all links disappeared after every restart.
-
-This version removes those two failure points:
-
-1. The GitHub Pages client uses a real public shortening service.
-2. The optional Flask backend uses SQLite for persistent storage.
-
-The original implementation is preserved on the branch:
-
-```text
-archive/angular-flask-prototype
-```
-
-## API provider
-
-The hosted frontend primarily uses the Spoo.me API and may use CleanURI as a fallback for standard links. Availability, abuse controls and rate limits are controlled by those third-party providers.
-
-## Security notes
-
-- Only `http://` and `https://` targets are accepted by the self-hosted backend.
-- SQL statements use parameterized queries.
-- Custom aliases are validated before database insertion.
-- Generated codes use Python's `secrets` module.
-- Do not treat a URL shortener as a trust signal; always verify destinations before opening unfamiliar links.
+This checks the live HTML against tested source, bot responses, root robots behavior, static assets, sitemap and a genuine HTTP 404. Google's URL Inspection and Performance results remain separate from these technical checks. See [search-engine setup](SEARCH_CONSOLE_SETUP.md) and [the audit](docs/SEO_AUDIT.md).
 
 ## Author
 
-**Olawumi Oluwafemi — Pycoder**
+[Olawumi Oluwafemi (Pycoder)](https://github.com/Oluwafemi1x) · [Portfolio](https://oluwafemi1x.github.io/Task-Manager/)
 
-- GitHub: https://github.com/Oluwafemi1x
-- Portfolio: https://oluwafemi1x.github.io/Task-Manager/
-
-## License
-
-MIT
+MIT license. The earlier Angular prototype remains on `archive/angular-flask-prototype`.

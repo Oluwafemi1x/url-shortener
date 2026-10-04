@@ -1,0 +1,74 @@
+{
+  "acceptable-use/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "89893997ef6b9ba335b59cd6f07956bb84a6aa570f4796b45b9c3ee63f57a174"
+  },
+  "custom-url-shortener/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "65aaaa41621d520b0f4d396cf7182ae8cb7ab0bb92f4e6f542a33e82d9af7f60"
+  },
+  "free-qr-code-url-shortener/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "315ea6be864041a452354798802081c7ad208c9f4bfc5b29527e6dec0e0eac5b"
+  },
+  "free-url-shortener-no-signup/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "60e478cf7b109699d8dea53c410a017fe8689b5fd7faf9d5c049513765fd2b4b"
+  },
+  "guides/how-to-shorten-a-url/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "2a206d460abe87f5b847fea9e8c18f326b7eb415900bf26b0a203fa5c4a657cf"
+  },
+  "guides/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "92d03430cce17965b79a87298641f1cfe6459f4d000f3c530176e73336f407c8"
+  },
+  "guides/utm-parameters-explained/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "b666dd13aab0e8b6b0781628d2bfe00bfea756349f1d5ede72c4aab10119077a"
+  },
+  "guides/what-is-a-url-shortener/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "be255fa7fa65f140a90e9f472922eab89d427ec376b514678af601e0947df826"
+  },
+  "index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "dedfe0c6af6880e539bb19188708692847d4c313b5c92124dad104a15610ab6f"
+  },
+  "link-tracker/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "03887c9b2a8a41f9bd63919043ed5401187a5fdaff50934e6067e322c1df8c9c"
+  },
+  "privacy/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "4efe1b7581736a797d0dd3a7122d427e40948ebe915762556d2770871a049d5a"
+  },
+  "qr-code-generator/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "c46aa4da6755c26d46e0c99cd6f22d75253fe6b30cfe8be4563b8ff0c506d96a"
+  },
+  "report-abuse/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "aa34fd03e32cf8434a74a0a970ea71a9cac8ad7aefc9a25320e30f2bc6456361"
+  },
+  "terms/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "5e7d9303864de360df5d7d581e5dbbf73ba3cba5066394d4595898a9fa28492a"
+  },
+  "url-expander/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "5bc465e928b22c301d9e1c21dd431071e4a76e2a35d73e653462b7a4e5b244fd"
+  },
+  "url-shortener-for-social-media/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "b66cb2b0aa0f1c486e032108d24c4e21cb4a4de6514fe2eb08eb30e3d5a1086e"
+  },
+  "url-shortener-with-click-tracking/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "339e45974804868a4960c5c2176589721e69f1e5ee6ada277074f77c08472c7b"
+  },
+  "utm-builder/index.html": {
+    "lastmod": "2026-10-04",
+    "sha256": "882567c6c1a49b36b814c913cfad55727253b9ac7626b66e77c6afa20cec61d6"
+  }
+}

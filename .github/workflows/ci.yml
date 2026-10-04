@@ -22,10 +22,19 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Set up Python for SEO checks
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Validate public SEO architecture
+        run: python scripts/seo.py
+
       - name: Check JavaScript syntax
         run: |
           node --check app.js
           node --check tools.js
+          node scripts/test_frontend.cjs
 
       - name: Check required frontend files
         run: |
@@ -51,7 +60,7 @@ jobs:
           grep -q "shortenForm" index.html
           grep -q "https://pyc0.onrender.com" app.js
           grep -q "https://pyc0.onrender.com" tools.js
-          grep -q "app.js?v=20260928-4" index.html
+          grep -q "app.js?v=" index.html
           grep -q '"@type": "WebApplication"' index.html
           grep -q "report-abuse/" index.html
           ! grep -q "https://spoo.me/" app.js
@@ -177,9 +186,9 @@ jobs:
       - name: Verify GitHub Pages product pages
         run: |
           curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5             https://oluwafemi1x.github.io/url-shortener/ > /tmp/index.html
-          grep -q 'app.js?v=20260928-4' /tmp/index.html
+          grep -q 'app.js?v=' /tmp/index.html
 
-          curl --fail --silent --show-error             'https://oluwafemi1x.github.io/url-shortener/app.js?v=20260928-4' > /tmp/app.js
+          curl --fail --silent --show-error             'https://oluwafemi1x.github.io/url-shortener/app.js?v=' > /tmp/app.js
           grep -q 'https://pyc0.onrender.com' /tmp/app.js
           ! grep -q 'https://spoo.me/' /tmp/app.js
           ! grep -q 'https://cleanuri.com/' /tmp/app.js

@@ -1,0 +1,88 @@
+name: Publish tested Pages
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: publish-public-pages
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Prepare checked public assets
+        run: |
+          python scripts/seo.py --export /tmp/public-site
+          git rev-parse HEAD > /tmp/public-site/source-version.txt
+          git rev-parse origin/gh-pages > /tmp/previous-pages-sha
+      - name: Publish public files to existing Pages branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git worktree add /tmp/pages-checkout gh-pages
+          python - <<'PY'
+          from pathlib import Path
+          import shutil
+          target=Path('/tmp/pages-checkout')
+          for path in target.iterdir():
+              if path.name == '.git': continue
+              if path.is_dir(): shutil.rmtree(path)
+              else: path.unlink()
+          shutil.copytree('/tmp/public-site', target, dirs_exist_ok=True)
+          workflow=target/'.github/workflows/indexnow.yml'
+          workflow.parent.mkdir(parents=True, exist_ok=True)
+          shutil.copyfile('.github/workflows/indexnow.yml', workflow)
+          PY
+          git -C /tmp/pages-checkout add -A
+          if ! git -C /tmp/pages-checkout diff --cached --quiet; then
+            git -C /tmp/pages-checkout commit -m "Publish tested source $(git rev-parse --short HEAD)"
+            git -C /tmp/pages-checkout push origin gh-pages
+          fi
+      - name: Request Pages build explicitly
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: gh api --method POST "repos/$REPO/pages/builds"
+      - name: Wait for exact source to be live
+        run: |
+          python - <<'PY'
+          import subprocess,time,urllib.request
+          expected=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          url='https://oluwafemi1x.github.io/url-shortener/source-version.txt'
+          for attempt in range(36):
+              try:
+                  with urllib.request.urlopen(url+'?source='+expected,timeout=20) as r:
+                      if r.read().decode().strip()==expected: break
+              except Exception: pass
+              if attempt == 35: raise SystemExit('Pages did not publish expected source')
+              time.sleep(10)
+          PY
+      - name: Verify all live pages and notify changed URLs
+        run: |
+          python scripts/seo.py --live > /tmp/live-seo-check.txt
+          python scripts/indexnow.py --before "$(cat /tmp/previous-pages-sha)" --after HEAD
+      - name: Save deployment and IndexNow receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: search-publishing-receipts
+          path: |
+            /tmp/live-seo-check.txt
+            /tmp/indexnow-receipt.json
